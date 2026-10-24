@@ -21,7 +21,7 @@ export function HighlightedText({
 
   if (activeIssues.length === 0) {
     return (
-      <div className="p-6 rounded-2xl bg-white/[0.02] border border-white/5 font-sans leading-relaxed text-gray-200 whitespace-pre-wrap text-base">
+      <div className="p-6 rounded-2xl bg-stone-900/40 border border-stone-800 font-sans leading-relaxed text-stone-300 whitespace-pre-wrap text-base">
         {body}
       </div>
     );
@@ -61,7 +61,7 @@ export function HighlightedText({
         key={`issue-${issue.id}`}
         onClick={() => onSelectIssue(issue.id)}
         className={`${highlightClass} relative inline-block transition-all duration-200 ${
-          isSelected ? 'ring-2 ring-white ring-offset-2 ring-offset-slate-900 font-bold scale-[1.02]' : ''
+          isSelected ? 'ring-2 ring-amber-400 ring-offset-2 ring-offset-stone-900 font-bold scale-[1.02]' : ''
         }`}
         title={`${issue.severity.toUpperCase()}: ${issue.explanation}`}
       >
@@ -83,7 +83,7 @@ export function HighlightedText({
   }
 
   return (
-    <div className="p-6 rounded-2xl bg-slate-900/40 border border-white/10 font-sans leading-relaxed text-gray-200 whitespace-pre-wrap text-base selection:bg-indigo-500/30">
+    <div className="p-6 rounded-2xl bg-stone-900/60 border border-stone-800 font-sans leading-relaxed text-stone-200 whitespace-pre-wrap text-base selection:bg-amber-500/30">
       {elements}
     </div>
   );

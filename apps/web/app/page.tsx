@@ -11,6 +11,7 @@ import { DiffView } from '../components/DiffView';
 import { CommentThread } from '../components/CommentThread';
 import { ContrastCheckerModal } from '../components/ContrastCheckerModal';
 import { MultiTenantDemo } from '../components/MultiTenantDemo';
+import { LoginScreen } from '../components/LoginScreen';
 import {
   Sparkles,
   Plus,
@@ -320,9 +321,24 @@ export default function AppHome() {
     ? contentDetails.versions[contentDetails.versions.length - 2]
     : null;
 
+  if (authLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-[#141210] text-stone-400">
+        <div className="flex items-center gap-3 text-sm font-medium">
+          <div className="w-5 h-5 border-2 border-amber-500 border-t-transparent rounded-full animate-spin" />
+          <span>Connecting to workspace...</span>
+        </div>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return <LoginScreen />;
+  }
+
   return (
-    <div className="min-h-screen flex flex-col bg-[#090D16] text-gray-100 selection:bg-indigo-500/30">
-      {/* Universal Header with Navigation & 1-Click Persona Switcher */}
+    <div className="min-h-screen flex flex-col bg-[#141210] text-stone-100 selection:bg-amber-500/30">
+      {/* Universal Header with Navigation & Profile Sign Out */}
       <Header
         activeTab={activeTab}
         setActiveTab={handleTabChange}
@@ -338,23 +354,23 @@ export default function AppHome() {
         {activeTab === 'studio' && (
           <div className="space-y-6">
             {/* Top Action Bar */}
-            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 glass-panel p-4 rounded-2xl border border-white/10">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 glass-panel p-4 rounded-2xl border border-stone-800">
               <div className="flex items-center gap-3">
                 <div className="relative">
-                  <Search className="w-4 h-4 text-gray-400 absolute left-3 top-2.5" />
+                  <Search className="w-4 h-4 text-stone-400 absolute left-3 top-2.5" />
                   <input
                     type="text"
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     placeholder="Search drafts by title..."
-                    className="pl-9 pr-4 py-1.5 rounded-xl bg-black/40 border border-white/10 text-xs text-white placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                    className="pl-9 pr-4 py-1.5 rounded-xl bg-stone-900 border border-stone-700/60 text-xs text-white placeholder-stone-500 focus:outline-none focus:ring-1 focus:ring-amber-500"
                   />
                 </div>
 
                 <select
                   value={channelFilter}
                   onChange={(e) => setChannelFilter(e.target.value)}
-                  className="px-3 py-1.5 rounded-xl bg-black/40 border border-white/10 text-xs text-gray-300 focus:outline-none"
+                  className="px-3 py-1.5 rounded-xl bg-stone-900 border border-stone-700/60 text-xs text-stone-300 focus:outline-none"
                 >
                   <option value="ALL">All Channels</option>
                   <option value="LinkedIn">LinkedIn</option>
@@ -367,7 +383,7 @@ export default function AppHome() {
 
               <button
                 onClick={() => setIsNewModalOpen(true)}
-                className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold transition shadow-md shadow-indigo-600/30"
+                className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-amber-600 hover:bg-amber-500 text-white text-xs font-bold transition shadow-md shadow-amber-600/25"
               >
                 <Plus className="w-4 h-4" />
                 New Content Draft
@@ -379,7 +395,7 @@ export default function AppHome() {
               
               {/* Drafts Sidebar */}
               <div className="lg:col-span-4 space-y-3">
-                <div className="flex items-center justify-between text-xs font-bold uppercase tracking-wider text-gray-400 px-1">
+                <div className="flex items-center justify-between text-xs font-bold uppercase tracking-wider text-stone-400 px-1">
                   <span>Organization Drafts ({filteredContents.length})</span>
                 </div>
 
@@ -392,8 +408,8 @@ export default function AppHome() {
                         onClick={() => loadContentDetails(c.id)}
                         className={`p-4 rounded-2xl border transition-all cursor-pointer ${
                           isSelected
-                            ? 'bg-indigo-950/40 border-indigo-500/60 shadow-lg shadow-indigo-500/10'
-                            : 'glass-panel hover:bg-slate-800/40'
+                            ? 'bg-amber-950/25 border-amber-500/50 shadow-md shadow-amber-500/10'
+                            : 'glass-panel hover:bg-stone-850'
                         }`}
                       >
                         <div className="flex items-start justify-between gap-2 mb-1.5">
@@ -401,16 +417,16 @@ export default function AppHome() {
                           <ScoreBadge score={c.latest_score} size="sm" showLabel={false} />
                         </div>
 
-                        <div className="flex items-center justify-between text-xs text-gray-400">
+                        <div className="flex items-center justify-between text-xs text-stone-400">
                           <div className="flex items-center gap-2">
-                            <span className="px-2 py-0.5 rounded-md bg-white/5 border border-white/5 text-[10px] font-semibold text-gray-300">
+                            <span className="px-2 py-0.5 rounded-md bg-stone-800 border border-stone-700/60 text-[10px] font-semibold text-stone-300">
                               {c.channel}
                             </span>
-                            <span className="capitalize text-[11px] font-medium text-indigo-300">
+                            <span className="capitalize text-[11px] font-medium text-amber-300">
                               {c.status.replace('_', ' ')}
                             </span>
                           </div>
-                          <span className="text-[10px] text-gray-500">v{c.current_version_no || 1}</span>
+                          <span className="text-[10px] text-stone-500">v{c.current_version_no || 1}</span>
                         </div>
                       </div>
                     );
@@ -423,15 +439,15 @@ export default function AppHome() {
                 {contentDetails ? (
                   <div className="space-y-6">
                     {/* Header Panel */}
-                    <div className="glass-panel p-6 rounded-3xl border border-white/10 space-y-4">
+                    <div className="glass-panel p-6 rounded-3xl border border-stone-800 space-y-4">
                       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                         <div>
-                          <div className="flex items-center gap-2.5 text-xs text-gray-400 mb-1">
-                            <span className="px-2.5 py-0.5 rounded-full bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 text-[10px] font-bold">
+                          <div className="flex items-center gap-2.5 text-xs text-stone-400 mb-1">
+                            <span className="px-2.5 py-0.5 rounded-full bg-amber-500/15 text-amber-300 border border-amber-500/30 text-[10px] font-bold">
                               {contentDetails.content.channel}
                             </span>
                             <span>•</span>
-                            <span className="capitalize font-semibold text-gray-300">
+                            <span className="capitalize font-semibold text-stone-300">
                               Status: {contentDetails.content.status.replace('_', ' ')}
                             </span>
                             <span>•</span>
@@ -445,12 +461,12 @@ export default function AppHome() {
                       </div>
 
                       {/* Action Bar */}
-                      <div className="flex flex-wrap items-center justify-between gap-3 pt-3 border-t border-white/10">
+                      <div className="flex flex-wrap items-center justify-between gap-3 pt-3 border-t border-stone-800">
                         <div className="flex items-center gap-2">
                           <button
                             onClick={handleRunReview}
                             disabled={isReviewing}
-                            className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white text-xs font-bold transition shadow-lg shadow-indigo-600/30 disabled:opacity-50"
+                            className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-amber-600 to-amber-500 hover:from-amber-500 hover:to-amber-400 text-white text-xs font-bold transition shadow-lg shadow-amber-600/25 disabled:opacity-50"
                           >
                             <Sparkles className={`w-4 h-4 ${isReviewing ? 'animate-spin' : ''}`} />
                             {isReviewing ? 'Scanning Brand Rules...' : 'Run AI Review'}
@@ -531,7 +547,7 @@ export default function AppHome() {
                               rows={5}
                               value={editorBody}
                               onChange={(e) => setEditorBody(e.target.value)}
-                              className="w-full p-4 rounded-2xl bg-black/50 border border-white/10 font-mono text-xs text-gray-200 focus:outline-none focus:ring-1 focus:ring-indigo-500 leading-relaxed"
+                              className="w-full p-4 rounded-2xl bg-stone-900/90 border border-stone-800 font-mono text-xs text-stone-200 focus:outline-none focus:ring-1 focus:ring-amber-500 leading-relaxed"
                             />
                           </div>
                         )}
@@ -548,9 +564,9 @@ export default function AppHome() {
 
                       {/* Right Side: Issue Cards and Intent-Preserving Fixes */}
                       <div className="space-y-4">
-                        <div className="flex items-center justify-between text-xs font-bold text-gray-400">
+                        <div className="flex items-center justify-between text-xs font-bold text-stone-400">
                           <span>Brand Findings & Suggestions ({contentDetails.issues.filter(i => i.status === 'open').length} Open)</span>
-                          <span className="text-[11px] text-indigo-400">1-Click Accept Fix</span>
+                          <span className="text-[11px] text-amber-400 font-medium">Accept Proposed Fix</span>
                         </div>
 
                         {contentDetails.issues.length === 0 ? (
@@ -604,7 +620,7 @@ export default function AppHome() {
                   Pre-publication governance sign-off for marketing copy, announcements, and claims.
                 </p>
               </div>
-              <span className="px-3 py-1 rounded-full bg-indigo-500/20 text-indigo-300 text-xs font-bold border border-indigo-500/30">
+              <span className="px-3 py-1 rounded-full bg-amber-500/15 text-amber-300 text-xs font-bold border border-amber-500/30">
                 {approvalQueue.length} Items Pending Review
               </span>
             </div>
@@ -720,7 +736,7 @@ export default function AppHome() {
                     const res = await api.getBannedTerms();
                     setBannedTerms(res.bannedTerms);
                   }}
-                  className="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold"
+                  className="px-4 py-2 rounded-xl bg-amber-600 hover:bg-amber-500 text-white text-xs font-bold transition shadow-sm shadow-amber-600/20"
                 >
                   Add Term
                 </button>
@@ -761,7 +777,7 @@ export default function AppHome() {
                     <div key={g.id} className="p-3.5 rounded-xl bg-black/40 border border-white/5 space-y-1">
                       <div className="flex items-center justify-between text-xs">
                         <span className="font-bold text-white">{g.title}</span>
-                        <span className="text-indigo-400">{g.chunk_count} Vector Chunks</span>
+                        <span className="text-amber-400">{g.chunk_count} Vector Chunks</span>
                       </div>
                       <div className="text-[11px] text-gray-400">Kind: {g.kind} • Embedded in pgvector</div>
                     </div>
@@ -805,7 +821,7 @@ export default function AppHome() {
               </div>
               <div className="p-5 rounded-2xl glass-panel border border-white/10">
                 <div className="text-xs text-gray-400 font-semibold mb-1">Org Average Score</div>
-                <div className="text-2xl font-black text-indigo-400">{analyticsData.stats.org_avg_score || 0}%</div>
+                <div className="text-2xl font-black text-amber-400">{analyticsData.stats.org_avg_score || 0}%</div>
               </div>
               <div className="p-5 rounded-2xl glass-panel border border-white/10">
                 <div className="text-xs text-gray-400 font-semibold mb-1">Active Violations</div>
@@ -880,12 +896,12 @@ export default function AppHome() {
               {auditLogs.map((log) => (
                 <div key={log.id} className="p-4 flex items-center justify-between text-xs">
                   <div className="flex items-center gap-3">
-                    <History className="w-4 h-4 text-indigo-400 flex-shrink-0" />
+                    <History className="w-4 h-4 text-amber-400 flex-shrink-0" />
                     <div>
                       <div className="font-bold text-white">
-                        <span className="text-indigo-300">{log.actor_name}</span> performed{' '}
+                        <span className="text-amber-300">{log.actor_name}</span> performed{' '}
                         <span className="font-mono text-emerald-300">{log.action}</span> on{' '}
-                        <span className="text-gray-300">{log.entity_type}</span>
+                        <span className="text-stone-300">{log.entity_type}</span>
                       </div>
                       <div className="text-[10px] text-gray-500 font-mono">
                         {JSON.stringify(log.metadata)}
@@ -970,7 +986,7 @@ export default function AppHome() {
                 </button>
                 <button
                   type="submit"
-                  className="px-5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold"
+                  className="px-5 py-2 rounded-xl bg-amber-600 hover:bg-amber-500 text-white text-xs font-bold transition shadow-md shadow-amber-600/20"
                 >
                   Create Draft
                 </button>
@@ -1015,7 +1031,7 @@ export default function AppHome() {
               </button>
               <button
                 onClick={handleReviewerDecision}
-                className="px-5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold"
+                className="px-5 py-2 rounded-xl bg-amber-600 hover:bg-amber-500 text-white text-xs font-bold transition shadow-md shadow-amber-600/20"
               >
                 Submit Decision
               </button>

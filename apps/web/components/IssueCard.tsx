@@ -45,8 +45,8 @@ export function IssueCard({
       onClick={onSelect}
       className={`p-5 rounded-2xl transition-all duration-200 border cursor-pointer ${
         isSelected
-          ? 'bg-slate-800/90 border-indigo-500 shadow-lg shadow-indigo-500/10 ring-1 ring-indigo-500/50'
-          : 'bg-slate-900/60 border-white/10 hover:border-white/20 hover:bg-slate-800/50'
+          ? 'bg-stone-850 border-amber-500/80 shadow-lg shadow-amber-500/10 ring-1 ring-amber-500/30'
+          : 'bg-stone-900/80 border-stone-800 hover:border-stone-700 hover:bg-stone-850'
       } ${isResolved ? 'opacity-50 grayscale-[50%]' : ''}`}
     >
       {/* Header tags */}
@@ -55,7 +55,7 @@ export function IssueCard({
           <span className={`px-2.5 py-0.5 rounded-full text-xs font-bold border uppercase tracking-wider ${severityBadge}`}>
             {issue.severity}
           </span>
-          <span className="text-xs font-medium text-gray-400 bg-white/5 px-2.5 py-0.5 rounded-full border border-white/5">
+          <span className="text-xs font-medium text-stone-300 bg-stone-800 px-2.5 py-0.5 rounded-full border border-stone-700/60">
             {typeLabels[issue.type] || issue.type}
           </span>
         </div>
@@ -66,7 +66,7 @@ export function IssueCard({
           </span>
         )}
         {issue.status === 'dismissed' && (
-          <span className="inline-flex items-center gap-1 text-xs text-gray-400 font-medium italic">
+          <span className="inline-flex items-center gap-1 text-xs text-stone-400 font-medium italic">
             Dismissed ({issue.dismiss_reason || 'Manual override'})
           </span>
         )}
@@ -74,24 +74,24 @@ export function IssueCard({
 
       {/* Quoted problem text */}
       <div className="mb-3">
-        <div className="text-xs text-gray-400 uppercase tracking-wider font-semibold mb-1">
-          Flagged Passage:
+        <div className="text-xs text-stone-400 uppercase tracking-wider font-semibold mb-1">
+          Flagged Text:
         </div>
-        <div className="px-3 py-1.5 rounded-lg bg-black/40 border border-white/5 font-mono text-sm text-rose-300/90 font-medium inline-block">
+        <div className="px-3 py-1.5 rounded-lg bg-black/50 border border-stone-800 font-mono text-xs text-rose-300 font-medium inline-block">
           &ldquo;{issue.quote}&rdquo;
         </div>
       </div>
 
       {/* Explanation */}
-      <p className="text-sm text-gray-300 mb-3 leading-relaxed">
+      <p className="text-xs text-stone-200 mb-3 leading-relaxed">
         {issue.explanation}
       </p>
 
       {/* Source citation */}
       {issue.source_ref && (
-        <div className="flex items-center gap-1.5 text-xs text-indigo-300/80 bg-indigo-500/10 px-3 py-1.5 rounded-lg border border-indigo-500/20 mb-4">
+        <div className="flex items-center gap-1.5 text-xs text-amber-300/90 bg-amber-500/10 px-3 py-1.5 rounded-lg border border-amber-500/20 mb-4">
           <BookOpen className="w-3.5 h-3.5 flex-shrink-0" />
-          <span className="font-semibold">Source:</span>
+          <span className="font-semibold text-amber-200">Rule Citation:</span>
           <span className="truncate">{issue.source_ref}</span>
         </div>
       )}
@@ -160,7 +160,7 @@ export function IssueCard({
                 value={dismissReason}
                 onChange={(e) => setDismissReason(e.target.value)}
                 placeholder="e.g. Approved exception by VP of Marketing"
-                className="w-full px-2.5 py-1.5 rounded-lg bg-slate-900 border border-white/10 text-xs text-white mb-2 focus:outline-none focus:border-indigo-500"
+                className="w-full px-2.5 py-1.5 rounded-lg bg-stone-900 border border-stone-700 text-xs text-white mb-2 focus:outline-none focus:border-amber-500"
               />
               <div className="flex justify-end gap-2">
                 <button

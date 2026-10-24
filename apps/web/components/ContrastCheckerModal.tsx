@@ -33,14 +33,14 @@ export function ContrastCheckerModal() {
   return (
     <div className="space-y-8 max-w-4xl mx-auto">
       {/* 1. Color Contrast Tool */}
-      <div className="p-6 rounded-3xl glass-panel border border-white/10 space-y-6">
+      <div className="p-6 rounded-3xl glass-panel border border-stone-800 space-y-6">
         <div className="flex items-center gap-3">
-          <div className="p-2.5 rounded-xl bg-indigo-500/20 text-indigo-400">
+          <div className="p-2.5 rounded-xl bg-amber-500/15 text-amber-400">
             <Sliders className="w-5 h-5" />
           </div>
           <div>
             <h2 className="text-lg font-bold text-white">WCAG 2.1 Color Contrast Ratio Validator</h2>
-            <p className="text-xs text-gray-400">
+            <p className="text-xs text-stone-400">
               Computes exact relative luminance ratio (WCAG AA: 4.5:1 for normal text, 3:1 for large text).
             </p>
           </div>
@@ -49,7 +49,7 @@ export function ContrastCheckerModal() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="space-y-4">
             <div>
-              <label className="block text-xs font-semibold text-gray-300 mb-1.5">
+              <label className="block text-xs font-semibold text-stone-300 mb-1.5">
                 Foreground (Text) Color:
               </label>
               <div className="flex items-center gap-2">
@@ -63,13 +63,13 @@ export function ContrastCheckerModal() {
                   type="text"
                   value={fgColor}
                   onChange={(e) => setFgColor(e.target.value)}
-                  className="flex-1 px-3 py-2 rounded-xl bg-black/40 border border-white/10 text-xs font-mono text-white"
+                  className="flex-1 px-3 py-2 rounded-xl bg-stone-900 border border-stone-700 text-xs font-mono text-white"
                 />
               </div>
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-gray-300 mb-1.5">
+              <label className="block text-xs font-semibold text-stone-300 mb-1.5">
                 Background Color:
               </label>
               <div className="flex items-center gap-2">
@@ -83,14 +83,14 @@ export function ContrastCheckerModal() {
                   type="text"
                   value={bgColor}
                   onChange={(e) => setBgColor(e.target.value)}
-                  className="flex-1 px-3 py-2 rounded-xl bg-black/40 border border-white/10 text-xs font-mono text-white"
+                  className="flex-1 px-3 py-2 rounded-xl bg-stone-900 border border-stone-700 text-xs font-mono text-white"
                 />
               </div>
             </div>
 
             <button
               onClick={handleCheckContrast}
-              className="w-full py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold transition shadow-md shadow-indigo-600/20"
+              className="w-full py-2.5 rounded-xl bg-amber-600 hover:bg-amber-500 text-white text-xs font-bold transition shadow-md shadow-amber-600/20"
             >
               Calculate Contrast Ratio
             </button>
