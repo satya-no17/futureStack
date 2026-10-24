@@ -6,7 +6,7 @@ import { storeGuidelineChunks, storeFactChunks } from '../services/ingestion/sto
 import { runReviewPipeline } from '../services/review';
 import { logAudit } from '../services/audit';
 
-async function seed() {
+export async function seedDatabase(): Promise<void> {
   console.log('[Seed] Initializing database schema...');
   await initDb();
 
@@ -305,12 +305,14 @@ Use short punchy sentences. Emojis are warmly encouraged! Avoid corporate speak,
   console.log('================================================================');
 }
 
-seed()
-  .then(() => {
-    console.log('[Seed] Finished successfully.');
-    process.exit(0);
-  })
-  .catch((err) => {
-    console.error('[Seed] Seed script error:', err);
-    process.exit(1);
-  });
+if (require.main === module) {
+  seedDatabase()
+    .then(() => {
+      console.log('[Seed] Finished successfully.');
+      process.exit(0);
+    })
+    .catch((err) => {
+      console.error('[Seed] Seed script error:', err);
+      process.exit(1);
+    });
+}

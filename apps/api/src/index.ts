@@ -1,7 +1,8 @@
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
-import { initDb } from './db';
+import { initDb, queryOne } from './db';
+import { seedDatabase } from './db/seed';
 import authRouter from './routes/auth';
 import usersRouter from './routes/users';
 import guidelinesRouter from './routes/guidelines';
@@ -39,6 +40,32 @@ app.get('/health', (req, res) => {
   });
 });
 
+// Seed Endpoint (can be accessed via browser or POST request)
+app.all('/seed', async (req, res) => {
+  try {
+    console.log('[Seed Endpoint] Seeding database via HTTP request...');
+    await seedDatabase();
+    res.json({
+      status: 'success',
+      message: 'Database seeded successfully with Acme Enterprise, Zest Social, and Solo Studio workspaces!',
+      demoCredentials: {
+        password: 'password123',
+        accounts: [
+          'admin@acme.com',
+          'creator@acme.com',
+          'reviewer@acme.com',
+          'admin@zest.io',
+          'creator@zest.io',
+          'solo@creator.dev'
+        ]
+      }
+    });
+  } catch (err: any) {
+    console.error('[Seed Endpoint] Error during seed:', err);
+    res.status(500).json({ status: 'error', error: err.message });
+  }
+});
+
 // Routes
 app.use('/auth', authRouter);
 app.use('/users', usersRouter);
@@ -60,6 +87,18 @@ app.use(errorHandler);
 async function startServer() {
   try {
     await initDb();
+
+    // Auto-seed if database has 0 organizations (perfect for Render free tier!)
+    try {
+      const orgCount = await queryOne<{ count: string }>('SELECT count(*) FROM organizations');
+      if (!orgCount || parseInt(orgCount.count, 10) === 0) {
+        console.log('[Auto-Seed] Empty database detected. Seeding demo data automatically...');
+        await seedDatabase();
+      }
+    } catch (err: any) {
+      console.warn('[Auto-Seed] Notice checking organization count:', err.message);
+    }
+
     app.listen(PORT, () => {
       console.log(`[Inkloom API] Server listening on http://localhost:${PORT}`);
     });
