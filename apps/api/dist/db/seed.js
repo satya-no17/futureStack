@@ -1,0 +1,215 @@
+"use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+const bcryptjs_1 = __importDefault(require("bcryptjs"));
+const index_1 = require("./index");
+const chunk_1 = require("../services/ingestion/chunk");
+const store_1 = require("../services/ingestion/store");
+const review_1 = require("../services/review");
+const audit_1 = require("../services/audit");
+async function seed() {
+    console.log('[Seed] Initializing database schema...');
+    await (0, index_1.initDb)();
+    const passwordHash = await bcryptjs_1.default.hash('password123', 10);
+    // Clear existing demo data
+    console.log('[Seed] Cleaning old demo records...');
+    await (0, index_1.query)(`DELETE FROM organizations WHERE name IN ('Acme Enterprise Solutions', 'Zest Social App', 'Solo Studio')`);
+    // ==========================================
+    // 1. ACME ENTERPRISE SOLUTIONS (B2B Formal)
+    // ==========================================
+    console.log('[Seed] Seeding Acme Enterprise Solutions...');
+    const acmeOrg = await (0, index_1.queryOne)(`INSERT INTO organizations (name, type) VALUES ('Acme Enterprise Solutions', 'enterprise') RETURNING id`);
+    const acmeId = acmeOrg.id;
+    // Acme Users
+    const acmeAdmin = await (0, index_1.queryOne)(`INSERT INTO users (organization_id, name, email, password_hash, role)
+     VALUES ($1, 'Victoria Brand', 'admin@acme.com', $2, 'admin') RETURNING id`, [acmeId, passwordHash]);
+    const acmeCreator = await (0, index_1.queryOne)(`INSERT INTO users (organization_id, name, email, password_hash, role)
+     VALUES ($1, 'Leo Writer', 'creator@acme.com', $2, 'creator') RETURNING id`, [acmeId, passwordHash]);
+    const acmeReviewer = await (0, index_1.queryOne)(`INSERT INTO users (organization_id, name, email, password_hash, role)
+     VALUES ($1, 'Sarah Approver', 'reviewer@acme.com', $2, 'reviewer') RETURNING id`, [acmeId, passwordHash]);
+    // Acme Banned Terms (12 terms)
+    const acmeBanned = [
+        { term: 'cheap', rep: 'cost-effective', reason: 'Diminishes perception of enterprise grade software.', sev: 'high' },
+        { term: 'guaranteed', rep: 'backed by our 99.95% SLA', reason: 'Unqualified performance guarantees create contractual liability.', sev: 'high' },
+        { term: '#1', rep: 'industry-leading', reason: 'Unsubstantiated numerical ranking prohibited by compliance.', sev: 'high' },
+        { term: 'instant', rep: 'near real-time', reason: 'Overpromising response latency.', sev: 'medium' },
+        { term: 'hack', rep: 'strategic optimization', reason: 'Informal jargon unsuitable for Fortune 500 audience.', sev: 'medium' },
+        { term: 'killer', rep: 'premier', reason: 'Violent or sensationalized vernacular is strictly barred.', sev: 'high' },
+        { term: 'our app', rep: 'our enterprise platform', reason: 'Colloquial terminology; refer to product as platform or solution.', sev: 'medium' },
+        { term: 'customers', rep: 'enterprise clients', reason: 'Standard brand voice designates B2B buyers as enterprise clients.', sev: 'low' },
+        { term: 'disruptive', rep: 'transformative', reason: 'Overused buzzword discouraged in corporate publications.', sev: 'low' },
+        { term: 'magic', rep: 'automated workflows', reason: 'Tech descriptions must remain rigorously factual.', sev: 'medium' },
+        { term: 'free stuff', rep: 'complimentary tier', reason: 'Unprofessional language.', sev: 'medium' },
+        { term: 'crazy fast', rep: 'sub-50ms median latency', reason: 'Informal hyperbole not permitted in brand copy.', sev: 'high' }
+    ];
+    for (const b of acmeBanned) {
+        await (0, index_1.query)(`INSERT INTO banned_terms (organization_id, term, preferred_replacement, reason, severity)
+       VALUES ($1, $2, $3, $4, $5)`, [acmeId, b.term, b.rep, b.reason, b.sev]);
+    }
+    // Acme Brand Guidelines (Voice & Policy)
+    const acmeGuideText = `
+# Acme Brand Voice & Style Guide
+
+## 1. Executive Summary & Brand Identity
+Acme Enterprise Solutions builds enterprise-grade data orchestration software for Fortune 500 organizations. Our brand voice is authoritative, measured, trustworthy, and precise. We never rely on sensationalism, internet slang, or unverified superlatives. Every claim must be demonstrable through verified technical benchmarks and SOC2-compliant certifications.
+
+## 2. Tone and Terminology Guidelines
+We speak with quiet confidence. Avoid aggressive sales pitches or unhedged guarantees. Refer to our software as "our platform", "our solution", or "the Acme infrastructure", never as "our app" or "a little tool". Refer to partners as "enterprise clients" or "organizations", never "users" or "customers".
+
+## 3. Legal and Compliance Boundaries
+Never declare Acme as "#1" or "the single best" in marketing collateral unless citing a specifically approved Gartner Magic Quadrant report. Absolute guarantees of 100% security or zero bugs are strictly prohibited. Performance claims must specify exact benchmark conditions.
+`;
+    const acmeGuide = await (0, index_1.queryOne)(`INSERT INTO guidelines (organization_id, title, kind, file_url)
+     VALUES ($1, 'Acme Global Brand Style Guide', 'voice', 'acme_brand_guide_2026.pdf') RETURNING id`, [acmeId]);
+    const acmeGuideChunks = (0, chunk_1.chunkDocument)(acmeGuideText, 'Acme Brand Voice');
+    await (0, store_1.storeGuidelineChunks)(acmeId, acmeGuide.id, acmeGuideChunks);
+    // Acme Approved Facts (16 facts)
+    const acmeFactsText = `
+# Acme Enterprise Fact Sheet & Specifications
+
+## Section 1: Reliability and Architecture
+- Fact 1: Acme platform provides a contractual 99.95% uptime SLA backed by automated failover.
+- Fact 2: System is SOC2 Type II certified and ISO 27001 compliant across all AWS and Azure regions.
+- Fact 3: System architecture supports up to 100,000 concurrent streaming pipelines.
+- Fact 4: Global median API response latency is 45 milliseconds under standard enterprise load.
+
+## Section 2: Clients and Scale
+- Fact 5: Acme powers data pipelines for over 500 enterprise clients worldwide, including 38 Fortune 100 companies.
+- Fact 6: The platform processes over 12 billion events daily across 14 geographic data centers.
+- Fact 7: We do not serve individual consumer accounts or millions of mobile users; our market is enterprise B2B.
+
+## Section 3: Pricing and Commercial Terms
+- Fact 8: Enterprise tier pricing starts at $499 per month billed annually, with custom dedicated clusters available.
+- Fact 9: Onboarding includes dedicated technical account management with a 15-minute emergency response SLA.
+- Fact 10: Data is encrypted at rest using AES-256 and in transit using TLS 1.3.
+- Fact 11: Acme was founded in 2021 by veterans of distributed systems engineering.
+- Fact 12: Zero data retention on third-party LLM evaluation pipelines; customer data is never used to train public models.
+`;
+    const acmeFactsDoc = await (0, index_1.queryOne)(`INSERT INTO fact_documents (organization_id, title, file_url, effective_date)
+     VALUES ($1, 'Acme Verified Technical Facts & Specs', 'acme_facts_2026.pdf', CURRENT_DATE) RETURNING id`, [acmeId]);
+    const acmeFactChunks = (0, chunk_1.chunkDocument)(acmeFactsText, 'Acme Technical Specs');
+    await (0, store_1.storeFactChunks)(acmeId, acmeFactsDoc.id, acmeFactChunks);
+    // ==========================================
+    // 2. ZEST SOCIAL APP (Consumer, Playful)
+    // ==========================================
+    console.log('[Seed] Seeding Zest Social App...');
+    const zestOrg = await (0, index_1.queryOne)(`INSERT INTO organizations (name, type) VALUES ('Zest Social App', 'enterprise') RETURNING id`);
+    const zestId = zestOrg.id;
+    // Zest Users
+    const zestAdmin = await (0, index_1.queryOne)(`INSERT INTO users (organization_id, name, email, password_hash, role)
+     VALUES ($1, 'Chloe Director', 'admin@zest.io', $2, 'admin') RETURNING id`, [zestId, passwordHash]);
+    const zestCreator = await (0, index_1.queryOne)(`INSERT INTO users (organization_id, name, email, password_hash, role)
+     VALUES ($1, 'Alex Social', 'creator@zest.io', $2, 'creator') RETURNING id`, [zestId, passwordHash]);
+    const zestReviewer = await (0, index_1.queryOne)(`INSERT INTO users (organization_id, name, email, password_hash, role)
+     VALUES ($1, 'Marcus Editor', 'reviewer@zest.io', $2, 'reviewer') RETURNING id`, [zestId, passwordHash]);
+    // Zest Banned Terms (Corporate stiff terms banned!)
+    const zestBanned = [
+        { term: 'synergistic', rep: 'fun and connected', reason: 'Stiff corporate jargon forbidden in consumer app.', sev: 'high' },
+        { term: 'enterprise-grade', rep: 'super smooth', reason: 'Zest is a casual consumer product, not enterprise B2B.', sev: 'high' },
+        { term: 'heretofore', rep: 'until now', reason: 'Archaic terminology.', sev: 'medium' },
+        { term: 'furthermore', rep: 'plus', reason: 'Stuffy academic phrasing.', sev: 'low' },
+        { term: 'pursuant to', rep: 'as we promised', reason: 'Legalistic phrasing not aligned with upbeat vibe.', sev: 'high' },
+        { term: 'leverage', rep: 'use', reason: 'Corporate buzzword.', sev: 'medium' }
+    ];
+    for (const b of zestBanned) {
+        await (0, index_1.query)(`INSERT INTO banned_terms (organization_id, term, preferred_replacement, reason, severity)
+       VALUES ($1, $2, $3, $4, $5)`, [zestId, b.term, b.rep, b.reason, b.sev]);
+    }
+    // Zest Guidelines
+    const zestGuideText = `
+# Zest Social App Voice & Creative Guidelines
+
+## 1. Brand Personality
+Zest is playful, vibrant, conversational, and energetic! We love emojis, friendly banter, and direct address ("you", "besties", "friends"). We talk like an excited creative friend sharing a cool discovery, never like a corporate compliance officer.
+
+## 2. Style Rules
+Use short punchy sentences. Emojis are warmly encouraged! Avoid corporate speak, bureaucratic jargon, or pretentious vocabulary.
+`;
+    const zestGuide = await (0, index_1.queryOne)(`INSERT INTO guidelines (organization_id, title, kind, file_url)
+     VALUES ($1, 'Zest Community Tone & Playbook', 'voice', 'zest_playbook.md') RETURNING id`, [zestId]);
+    const zestGuideChunks = (0, chunk_1.chunkDocument)(zestGuideText, 'Zest Brand Playbook');
+    await (0, store_1.storeGuidelineChunks)(zestId, zestGuide.id, zestGuideChunks);
+    // Zest Approved Facts
+    const zestFactsText = `
+# Zest Verified Facts
+
+## 1. Community and Platform Metrics
+- Fact 1: Zest has over 500,000 active community members worldwide.
+- Fact 2: Available on iOS App Store and Google Play Store with a 4.8 star average rating.
+- Fact 3: Over 2 million creative photos and reels shared each week.
+- Fact 4: 100% free starter tier with no advertisements for early adopters.
+`;
+    const zestFactsDoc = await (0, index_1.queryOne)(`INSERT INTO fact_documents (organization_id, title, file_url, effective_date)
+     VALUES ($1, 'Zest App Verified Metrics', 'zest_metrics.md', CURRENT_DATE) RETURNING id`, [zestId]);
+    const zestFactChunks = (0, chunk_1.chunkDocument)(zestFactsText, 'Zest Community Facts');
+    await (0, store_1.storeFactChunks)(zestId, zestFactsDoc.id, zestFactChunks);
+    // ==========================================
+    // 3. SOLO WORKSPACE (One-person org)
+    // ==========================================
+    console.log('[Seed] Seeding Solo Workspace...');
+    const soloOrg = await (0, index_1.queryOne)(`INSERT INTO organizations (name, type) VALUES ('Solo Studio', 'solo') RETURNING id`);
+    const soloId = soloOrg.id;
+    await (0, index_1.query)(`INSERT INTO users (organization_id, name, email, password_hash, role)
+     VALUES ($1, 'Sam Solo', 'solo@creator.dev', $2, 'solo')`, [soloId, passwordHash]);
+    // ==========================================
+    // 4. PRE-SEEDED DRAFTS & WORKFLOW DEMO DATA
+    // ==========================================
+    console.log('[Seed] Seeding sample content drafts and reviews...');
+    // Draft 1: Demo Plan canonical test draft in Acme (Pending review / Initial state)
+    const draft1 = await (0, index_1.queryOne)(`INSERT INTO contents (organization_id, created_by, title, channel, status, latest_score)
+     VALUES ($1, $2, 'Q4 Enterprise Launch LinkedIn Announcement', 'LinkedIn', 'draft', 45) RETURNING id`, [acmeId, acmeCreator.id]);
+    const draft1Body = `Our app is the #1 fastest tool, guaranteed! Trusted by millions of businesses to handle data pipelines with cheap pricing and zero downtime.`;
+    const draft1Ver1 = await (0, index_1.queryOne)(`INSERT INTO content_versions (organization_id, content_id, version_no, body, created_by)
+     VALUES ($1, $2, 1, $3, $4) RETURNING id`, [acmeId, draft1.id, draft1Body, acmeCreator.id]);
+    await (0, index_1.query)(`UPDATE contents SET current_version_id = $1 WHERE id = $2`, [draft1Ver1.id, draft1.id]);
+    // Run review on Draft 1 so it's ready with full issue highlights!
+    const review1 = await (0, index_1.queryOne)(`INSERT INTO reviews (organization_id, content_version_id, status)
+     VALUES ($1, $2, 'queued') RETURNING id`, [acmeId, draft1Ver1.id]);
+    await (0, review_1.runReviewPipeline)(review1.id, draft1Ver1.id, acmeId);
+    // Draft 2: Submitted to Reviewer Queue in Acme
+    const draft2 = await (0, index_1.queryOne)(`INSERT INTO contents (organization_id, created_by, title, channel, status, latest_score)
+     VALUES ($1, $2, 'SOC2 Security Certification Press Release', 'Press Release', 'submitted', 92) RETURNING id`, [acmeId, acmeCreator.id]);
+    const draft2Ver1Body = `Acme is pleased to announce completion of our annual SOC2 Type II audit. Our enterprise platform continues to deliver 99.95% uptime SLA for Fortune 500 clients.`;
+    const draft2Ver1 = await (0, index_1.queryOne)(`INSERT INTO content_versions (organization_id, content_id, version_no, body, created_by)
+     VALUES ($1, $2, 1, $3, $4) RETURNING id`, [acmeId, draft2.id, draft2Ver1Body, acmeCreator.id]);
+    await (0, index_1.query)(`UPDATE contents SET current_version_id = $1 WHERE id = $2`, [draft2Ver1.id, draft2.id]);
+    const review2 = await (0, index_1.queryOne)(`INSERT INTO reviews (organization_id, content_version_id, status)
+     VALUES ($1, $2, 'queued') RETURNING id`, [acmeId, draft2Ver1.id]);
+    await (0, review_1.runReviewPipeline)(review2.id, draft2Ver1.id, acmeId);
+    // Add anchored reviewer comment on Draft 2
+    await (0, index_1.query)(`INSERT INTO comments (organization_id, content_id, version_id, author_id, body, start_idx, end_idx)
+     VALUES ($1, $2, $3, $4, 'Great work! The citation of our SOC2 compliance and 99.95% SLA matches our verified specs perfectly.', 30, 80)`, [acmeId, draft2.id, draft2Ver1.id, acmeReviewer.id]);
+    // Draft 3: Approved and Published content in Acme
+    const draft3 = await (0, index_1.queryOne)(`INSERT INTO contents (organization_id, created_by, title, channel, status, latest_score)
+     VALUES ($1, $2, 'Annual Engineering Uptime Report', 'Blog', 'published', 100) RETURNING id`, [acmeId, acmeAdmin.id]);
+    const draft3Body = `In our annual reliability audit, Acme delivered 99.98% actual uptime across all geographic regions, outperforming our contractual 99.95% SLA commitment.`;
+    const draft3Ver = await (0, index_1.queryOne)(`INSERT INTO content_versions (organization_id, content_id, version_no, body, created_by)
+     VALUES ($1, $2, 1, $3, $4) RETURNING id`, [acmeId, draft3.id, draft3Body, acmeAdmin.id]);
+    await (0, index_1.query)(`UPDATE contents SET current_version_id = $1 WHERE id = $2`, [draft3Ver.id, draft3.id]);
+    // Seed initial audit trail
+    await (0, audit_1.logAudit)(acmeId, acmeAdmin.id, 'system_seed', 'organization', acmeId, { description: 'Demo data loaded' });
+    await (0, audit_1.logAudit)(acmeId, acmeCreator.id, 'create_content', 'content', draft1.id, { title: 'Q4 Enterprise Launch LinkedIn Announcement' });
+    await (0, audit_1.logAudit)(acmeId, acmeCreator.id, 'submit_content', 'content', draft2.id, { title: 'SOC2 Security Certification Press Release' });
+    await (0, audit_1.logAudit)(acmeId, acmeReviewer.id, 'approve_content', 'content', draft3.id, { title: 'Annual Engineering Uptime Report' });
+    console.log('[Seed] Database successfully seeded with Acme, Zest, and Solo workspaces!');
+    console.log('================================================================');
+    console.log('Demo Credentials (all accounts use password: password123)');
+    console.log(' Acme Admin:    admin@acme.com');
+    console.log(' Acme Creator:  creator@acme.com');
+    console.log(' Acme Reviewer: reviewer@acme.com');
+    console.log(' Zest Admin:    admin@zest.io');
+    console.log(' Zest Creator:  creator@zest.io');
+    console.log(' Solo Creator:  solo@creator.dev');
+    console.log('================================================================');
+}
+seed()
+    .then(() => {
+    console.log('[Seed] Finished successfully.');
+    process.exit(0);
+})
+    .catch((err) => {
+    console.error('[Seed] Seed script error:', err);
+    process.exit(1);
+});
