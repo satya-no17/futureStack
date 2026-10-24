@@ -86,11 +86,7 @@ router.get('/', authenticate, async (req: Request, res: Response) => {
   const params: any[] = [orgId];
 
   // If creator, show their own or all org contents
-  // If reviewer, show submitted, changes_requested, approved, published
-  if (role === 'reviewer') {
-    filterSql += ` AND c.status IN ('submitted', 'changes_requested', 'approved', 'rejected', 'published')`;
-  }
-
+  // All members of the organization can view the drafts in their workspace
   const contents = await query(
     `SELECT c.id, c.title, c.channel, c.status, c.latest_score, c.current_version_id, c.created_at,
             u.name as author_name, u.email as author_email,
@@ -141,7 +137,7 @@ router.get('/:id', authenticate, async (req: Request, res: Response) => {
 
   if (content.current_version_id) {
     latestReview = await queryOne(
-      `SELECT id, status, score, started_at, finished_at
+      `SELECT id, status, score, started_at, finished_at, error_message
        FROM reviews
        WHERE content_version_id = $1 AND organization_id = $2
        ORDER BY started_at DESC

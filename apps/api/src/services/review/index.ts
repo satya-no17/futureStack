@@ -86,10 +86,23 @@ export async function runReviewPipeline(
     );
 
     // 4. Run checkers in parallel
+    let aiFailed = false;
+    let aiErrorMessage = '';
+
     const [ruleIssues, toneIssues, claimIssues, a11yIssues] = await Promise.all([
       Promise.resolve(ruleCheck(body, bannedTerms)),
-      toneCheck(body, organizationId).catch(() => [] as RawIssue[]),
-      claimCheck(body, organizationId).catch(() => [] as RawIssue[]),
+      toneCheck(body, organizationId).catch(err => {
+        aiFailed = true;
+        aiErrorMessage = err.message || 'AI not responded';
+        console.warn('[ReviewPipeline] ToneCheck AI error:', err.message);
+        return [] as RawIssue[];
+      }),
+      claimCheck(body, organizationId).catch(err => {
+        aiFailed = true;
+        aiErrorMessage = err.message || 'AI not responded';
+        console.warn('[ReviewPipeline] ClaimCheck AI error:', err.message);
+        return [] as RawIssue[];
+      }),
       Promise.resolve(a11yCheck(body))
     ]);
 
@@ -120,6 +133,7 @@ export async function runReviewPipeline(
             suggestion: enriched.suggestion || issue.suggestion
           };
         } catch {
+          aiFailed = true;
           return issue;
         }
       })
@@ -148,10 +162,13 @@ export async function runReviewPipeline(
       );
     }
 
-    // Update review status
+    // Update review status - if AI failed, mark as 'failed' with 'AI not responded'
+    const reviewStatus = aiFailed ? 'failed' : 'done';
+    const statusErrorMsg = aiFailed ? (aiErrorMessage || 'AI not responded') : null;
+
     await query(
-      `UPDATE reviews SET status = 'done', score = $1, finished_at = CURRENT_TIMESTAMP WHERE id = $2`,
-      [finalScore, reviewId]
+      `UPDATE reviews SET status = $1, score = $2, error_message = $3, finished_at = CURRENT_TIMESTAMP WHERE id = $4`,
+      [reviewStatus, finalScore, statusErrorMsg, reviewId]
     );
 
     // Update content status & score
@@ -160,11 +177,16 @@ export async function runReviewPipeline(
       [finalScore, version.content_id]
     );
 
-    // Cache result
-    reviewCache.set(bodyHash, { score: finalScore, issues: enrichedIssues });
-  } catch (err) {
+    // Cache result if AI succeeded
+    if (!aiFailed) {
+      reviewCache.set(bodyHash, { score: finalScore, issues: enrichedIssues });
+    }
+  } catch (err: any) {
     console.error('[ReviewPipeline] Failed to complete review:', err);
-    await query(`UPDATE reviews SET status = 'failed' WHERE id = $1`, [reviewId]);
+    await query(
+      `UPDATE reviews SET status = 'failed', error_message = $1, finished_at = CURRENT_TIMESTAMP WHERE id = $2`,
+      [err?.message || 'AI not responded', reviewId]
+    );
   }
 }
 

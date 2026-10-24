@@ -6,7 +6,7 @@ import { requireRole } from '../middleware/requireRole';
 const router = Router();
 
 // GET /analytics/summary
-router.get('/summary', authenticate, requireRole('admin'), async (req: Request, res: Response) => {
+router.get('/summary', authenticate, async (req: Request, res: Response) => {
   const orgId = req.user!.orgId;
 
   // 1. Top violated rules & banned terms

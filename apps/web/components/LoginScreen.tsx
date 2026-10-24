@@ -2,55 +2,62 @@
 
 import React, { useState } from 'react';
 import { useAuth } from '../lib/authContext';
-import { ShieldCheck, AlertCircle, Key, Lock, Mail, Sparkles, Building2, User, ArrowRight } from 'lucide-react';
+import {
+  ShieldCheck,
+  AlertCircle,
+  Key,
+  Lock,
+  Mail,
+  ArrowRight,
+  ArrowLeft,
+  Loader2,
+} from 'lucide-react';
+
+interface LoginScreenProps {
+  onBack: () => void;
+}
 
 interface DefaultAccount {
   name: string;
   email: string;
   role: string;
   company: string;
-  description: string;
 }
 
 const DEFAULT_ACCOUNTS: DefaultAccount[] = [
   {
     name: 'Leo Writer',
     email: 'creator@acme.com',
-    role: 'Creator',
+    role: 'Writer',
     company: 'Acme Enterprise',
-    description: 'Drafts copy, runs AI reviews, accepts fixes'
   },
   {
     name: 'Sarah Approver',
     email: 'reviewer@acme.com',
     role: 'Reviewer',
     company: 'Acme Enterprise',
-    description: 'Inspects approval queue, diff viewer, signs off'
   },
   {
     name: 'Victoria Brand',
     email: 'admin@acme.com',
-    role: 'Brand Manager',
+    role: 'Brand Lead',
     company: 'Acme Enterprise',
-    description: 'Manages guidelines, facts, banned terms, analytics'
   },
   {
     name: 'Alex Social',
     email: 'creator@zest.io',
-    role: 'Creator',
-    company: 'Zest Social (Consumer)',
-    description: 'Casual mobile copy tested against consumer brand voice'
+    role: 'Writer',
+    company: 'Zest Social',
   },
   {
     name: 'Sam Solo',
     email: 'solo@creator.dev',
-    role: 'Solo Creator',
+    role: 'Solo Writer',
     company: 'Solo Studio',
-    description: 'Direct publishing without approval workflows'
-  }
+  },
 ];
 
-export function LoginScreen() {
+export function LoginScreen({ onBack }: LoginScreenProps) {
   const { login } = useAuth();
   const [email, setEmail] = useState('creator@acme.com');
   const [password, setPassword] = useState('password123');
@@ -67,7 +74,7 @@ export function LoginScreen() {
     } catch (err: any) {
       setErrorMsg(
         err.message?.includes('Failed to fetch')
-          ? 'Unable to reach backend API. The Render server might still be waking up from sleep. Please wait 15 seconds and try again.'
+          ? 'Unable to reach the backend. The server might be waking up from sleep — please wait 30 seconds and try again.'
           : err.message || 'Invalid email or password'
       );
     } finally {
@@ -82,141 +89,148 @@ export function LoginScreen() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col justify-center py-12 px-4 sm:px-6 lg:px-8 bg-[#141210] selection:bg-amber-500/30">
-      <div className="max-w-md w-full mx-auto space-y-6">
-        
-        {/* Brand Header */}
-        <div className="text-center space-y-2">
-          <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-gradient-to-tr from-amber-600 via-amber-500 to-orange-500 text-white shadow-xl shadow-amber-600/20 mb-2">
-            <ShieldCheck className="w-8 h-8" />
-          </div>
-          <h1 className="text-2xl font-black tracking-tight text-white">Inkloom AI</h1>
-          <p className="text-xs text-stone-400 max-w-xs mx-auto">
-            Pre-Publication Brand Governance & Claim Verification Platform
-          </p>
-        </div>
-
-        {/* Render Free-Tier Wake-Up Alert */}
-        <div className="p-4 rounded-2xl bg-amber-500/10 border border-amber-500/25 space-y-2">
-          <div className="flex items-center gap-2 text-xs font-bold text-amber-300">
-            <AlertCircle className="w-4 h-4 flex-shrink-0 text-amber-400" />
-            <span>Notice: Render Free-Tier Server Wake-Up</span>
-          </div>
-          <p className="text-xs text-amber-200/80 leading-relaxed pl-6">
-            If the backend was idle, Render puts free-tier instances to sleep. The initial sign in may take <strong>30 to 50 seconds</strong> to spin up. Please allow a moment on first connection.
-          </p>
-        </div>
-
-        {/* Main Login Card */}
-        <div className="glass-panel p-7 rounded-3xl border border-stone-800 shadow-2xl space-y-5">
-          <div className="border-b border-stone-800 pb-3">
-            <h2 className="text-base font-bold text-white">Sign In to Your Workspace</h2>
-            <p className="text-xs text-stone-400 mt-0.5">Enter your work credentials to access the governance console.</p>
-          </div>
-
-          {errorMsg && (
-            <div className="p-3 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-300 text-xs leading-relaxed">
-              {errorMsg}
+    <div className="landing-page min-h-screen bg-white flex flex-col selection:bg-violet-200">
+      {/* Top bar */}
+      <div className="border-b border-gray-100 bg-white">
+        <div className="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
+          <button
+            onClick={onBack}
+            className="inline-flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-900 transition-colors"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            Back to Home
+          </button>
+          <div className="flex items-center gap-2.5">
+            <div className="w-7 h-7 rounded-md bg-gray-900 flex items-center justify-center">
+              <ShieldCheck className="w-3.5 h-3.5 text-white" />
             </div>
-          )}
+            <span className="text-sm font-bold text-gray-900">Inkloom</span>
+          </div>
+        </div>
+      </div>
 
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div>
-              <label className="block text-xs font-semibold text-stone-300 mb-1.5">
-                Work Email Address
-              </label>
-              <div className="relative">
-                <Mail className="w-4 h-4 text-stone-500 absolute left-3.5 top-3" />
-                <input
-                  type="email"
-                  required
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="name@company.com"
-                  className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-stone-900 border border-stone-700/60 text-xs text-white placeholder-stone-500 focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500"
-                />
+      {/* Login body */}
+      <div className="flex-1 flex items-center justify-center py-12 px-4">
+        <div className="max-w-sm w-full space-y-6">
+          {/* Header */}
+          <div className="text-center space-y-1.5">
+            <h1 className="text-2xl font-extrabold tracking-tight text-gray-900">Welcome back</h1>
+            <p className="text-sm text-gray-500">Sign in to check and review your team&apos;s drafts.</p>
+          </div>
+
+          {/* Render notice */}
+          <div className="p-3.5 rounded-xl bg-amber-50 border border-amber-200 flex gap-3">
+            <AlertCircle className="w-4 h-4 text-amber-500 flex-shrink-0 mt-0.5" />
+            <div className="text-xs text-amber-700 leading-relaxed">
+              <strong className="font-semibold">Render Free Tier:</strong> If the backend was sleeping, the first sign-in may take <strong>30–50 seconds</strong>. Please be patient.
+            </div>
+          </div>
+
+          {/* Login form */}
+          <div className="p-6 rounded-2xl border border-gray-200 bg-white shadow-sm space-y-5">
+            {errorMsg && (
+              <div className="p-3 rounded-xl bg-red-50 border border-red-200 text-red-700 text-xs leading-relaxed">
+                {errorMsg}
               </div>
-            </div>
+            )}
 
-            <div>
-              <label className="block text-xs font-semibold text-stone-300 mb-1.5">
-                Password
-              </label>
-              <div className="relative">
-                <Lock className="w-4 h-4 text-stone-500 absolute left-3.5 top-3" />
-                <input
-                  type="password"
-                  required
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-stone-900 border border-stone-700/60 text-xs text-white placeholder-stone-500 focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500"
-                />
-              </div>
-            </div>
-
-            <button
-              type="submit"
-              disabled={isLoading}
-              className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-gradient-to-r from-amber-600 to-amber-500 hover:from-amber-500 hover:to-amber-400 text-white text-xs font-bold transition shadow-lg shadow-amber-600/20 disabled:opacity-50"
-            >
-              {isLoading ? (
-                <>
-                  <Sparkles className="w-4 h-4 animate-spin" />
-                  <span>Signing In (connecting to backend)...</span>
-                </>
-              ) : (
-                <>
-                  <span>Sign In</span>
-                  <ArrowRight className="w-4 h-4" />
-                </>
-              )}
-            </button>
-          </form>
-        </div>
-
-        {/* Default Demo Accounts Note */}
-        <div className="p-5 rounded-2xl glass-panel border border-stone-800 space-y-3">
-          <div className="flex items-center justify-between text-xs">
-            <div className="flex items-center gap-1.5 font-bold text-stone-200">
-              <Key className="w-3.5 h-3.5 text-amber-400" />
-              <span>Default Demo Accounts</span>
-            </div>
-            <span className="font-mono text-[11px] text-amber-300 bg-amber-500/10 px-2 py-0.5 rounded border border-amber-500/20">
-              Password: password123
-            </span>
-          </div>
-
-          <p className="text-[11px] text-stone-400">
-            Click any demo role below to fill credentials:
-          </p>
-
-          <div className="grid grid-cols-1 gap-2 pt-1">
-            {DEFAULT_ACCOUNTS.map((acc) => (
-              <button
-                key={acc.email}
-                type="button"
-                onClick={() => handleSelectAccount(acc)}
-                className={`p-2.5 rounded-xl border text-left transition flex items-center justify-between text-xs ${
-                  email === acc.email
-                    ? 'bg-amber-500/15 border-amber-500/40 text-amber-200'
-                    : 'bg-stone-900/60 border-stone-800 hover:border-stone-700 text-stone-300'
-                }`}
-              >
-                <div>
-                  <div className="font-bold flex items-center gap-1.5">
-                    <span>{acc.name}</span>
-                    <span className="text-[10px] text-stone-400 font-normal">({acc.company})</span>
-                  </div>
-                  <div className="text-[10px] text-stone-400">{acc.email}</div>
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div>
+                <label className="block text-xs font-semibold text-gray-700 mb-1.5">
+                  Email
+                </label>
+                <div className="relative">
+                  <Mail className="w-4 h-4 text-gray-400 absolute left-3 top-2.5" />
+                  <input
+                    type="email"
+                    required
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder="name@company.com"
+                    className="w-full pl-9 pr-3 py-2.5 rounded-lg bg-white border border-gray-200 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:border-gray-400 focus:ring-1 focus:ring-gray-400 transition-colors"
+                  />
                 </div>
-                <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-stone-800 text-stone-300 border border-stone-700">
-                  {acc.role}
-                </span>
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-gray-700 mb-1.5">
+                  Password
+                </label>
+                <div className="relative">
+                  <Lock className="w-4 h-4 text-gray-400 absolute left-3 top-2.5" />
+                  <input
+                    type="password"
+                    required
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    className="w-full pl-9 pr-3 py-2.5 rounded-lg bg-white border border-gray-200 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:border-gray-400 focus:ring-1 focus:ring-gray-400 transition-colors"
+                  />
+                </div>
+              </div>
+
+              <button
+                type="submit"
+                disabled={isLoading}
+                className="w-full flex items-center justify-center gap-2 py-2.5 rounded-lg bg-gray-900 text-white text-sm font-semibold hover:bg-gray-800 transition-colors disabled:opacity-50"
+              >
+                {isLoading ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    <span>Connecting...</span>
+                  </>
+                ) : (
+                  <>
+                    <span>Sign In</span>
+                    <ArrowRight className="w-4 h-4" />
+                  </>
+                )}
               </button>
-            ))}
+            </form>
+          </div>
+
+          {/* Demo accounts */}
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-1.5 text-xs font-semibold text-gray-700">
+                <Key className="w-3.5 h-3.5 text-gray-400" />
+                Demo Accounts
+              </div>
+              <span className="font-mono text-[11px] text-gray-500 bg-gray-100 px-2 py-0.5 rounded">
+                password123
+              </span>
+            </div>
+
+            <div className="space-y-1.5">
+              {DEFAULT_ACCOUNTS.map((acc) => (
+                <button
+                  key={acc.email}
+                  type="button"
+                  onClick={() => handleSelectAccount(acc)}
+                  className={`w-full p-2.5 rounded-lg border text-left transition-all text-xs flex items-center justify-between ${
+                    email === acc.email
+                      ? 'bg-gray-50 border-gray-300 text-gray-900'
+                      : 'bg-white border-gray-100 hover:border-gray-200 text-gray-600 hover:text-gray-900'
+                  }`}
+                >
+                  <div>
+                    <div className="font-semibold">
+                      {acc.name}
+                      <span className="text-gray-400 font-normal ml-1.5">({acc.company})</span>
+                    </div>
+                    <div className="text-[11px] text-gray-400 mt-0.5">{acc.email}</div>
+                  </div>
+                  <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full border ${
+                    email === acc.email
+                      ? 'bg-gray-900 text-white border-gray-900'
+                      : 'bg-gray-50 text-gray-500 border-gray-200'
+                  }`}>
+                    {acc.role}
+                  </span>
+                </button>
+              ))}
+            </div>
           </div>
         </div>
-
       </div>
     </div>
   );

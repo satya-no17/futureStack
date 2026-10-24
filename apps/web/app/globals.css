@@ -1,105 +1,117 @@
 @import "tailwindcss";
 
-:root {
-  --background: #141210;
-  --foreground: #f5f5f4;
-  --card-bg: rgba(28, 25, 23, 0.85);
-  --card-border: rgba(254, 215, 170, 0.12);
-  --accent-warm: #d97706;
-  --accent-amber: #f59e0b;
-}
-
-body {
-  background: radial-gradient(circle at 50% 0%, #26211c 0%, #141210 65%);
-  color: var(--foreground);
-  min-height: 100vh;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+/* ─── Global Font & Smoothing ─── */
+body, .landing-page, .app-dashboard {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
   -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
-/* Warm Business Glass Panels */
+/* ─── Theme Colors ─── */
+:root {
+  --background: #fbfbfc;
+  --foreground: #111827;
+  --card-bg: #ffffff;
+  --card-border: #e5e7eb;
+  --accent-violet: #7c3aed;
+}
+
+.app-dashboard {
+  background-color: #fbfbfc;
+  color: #111827;
+  min-height: 100vh;
+}
+
+/* Crisp Clean Panels (matching landing page cards) */
 .glass-panel {
-  background: rgba(28, 25, 23, 0.75);
-  backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
-  border: 1px solid rgba(254, 215, 170, 0.1);
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.03), 0 1px 2px -1px rgba(0, 0, 0, 0.03);
 }
 
 .glass-panel-hover {
   transition: all 0.2s ease-in-out;
 }
 .glass-panel-hover:hover {
-  background: rgba(38, 34, 31, 0.85);
-  border-color: rgba(217, 119, 6, 0.35);
-  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.35);
+  background: #ffffff;
+  border-color: #d1d5db;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.03);
 }
 
-/* Custom warm scrollbar */
+/* Clean Scrollbar */
 ::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+  width: 7px;
+  height: 7px;
 }
 ::-webkit-scrollbar-track {
-  background: rgba(20, 18, 16, 0.7);
+  background: #f3f4f6;
 }
 ::-webkit-scrollbar-thumb {
-  background: rgba(254, 215, 170, 0.18);
-  border-radius: 4px;
+  background: #d1d5db;
+  border-radius: 9999px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(254, 215, 170, 0.3);
+  background: #9ca3af;
 }
 
-/* Text highlight spans for AI review */
+/* Text highlight spans for review */
 .highlight-high {
-  background: rgba(225, 29, 72, 0.25);
-  border-bottom: 2px solid #f43f5e;
-  border-radius: 3px;
+  background: #fee2e2;
+  color: #991b1b;
+  border-bottom: 2px solid #ef4444;
+  border-radius: 4px;
   padding: 1px 4px;
   cursor: pointer;
-  transition: background 0.15s;
+  transition: all 0.15s ease-in-out;
 }
 .highlight-high:hover {
-  background: rgba(225, 29, 72, 0.45);
+  background: #fecaca;
 }
 
 .highlight-medium {
-  background: rgba(217, 119, 6, 0.28);
+  background: #fef3c7;
+  color: #92400e;
   border-bottom: 2px solid #f59e0b;
-  border-radius: 3px;
+  border-radius: 4px;
   padding: 1px 4px;
   cursor: pointer;
-  transition: background 0.15s;
+  transition: all 0.15s ease-in-out;
 }
 .highlight-medium:hover {
-  background: rgba(217, 119, 6, 0.48);
+  background: #fde68a;
 }
 
 .highlight-low {
-  background: rgba(14, 165, 233, 0.22);
-  border-bottom: 2px solid #0284c7;
-  border-radius: 3px;
+  background: #e0f2fe;
+  color: #0369a1;
+  border-bottom: 2px solid #0ea5e9;
+  border-radius: 4px;
   padding: 1px 4px;
   cursor: pointer;
-  transition: background 0.15s;
+  transition: all 0.15s ease-in-out;
 }
 .highlight-low:hover {
-  background: rgba(14, 165, 233, 0.4);
+  background: #bae6fd;
 }
 
 /* Diff formatting */
 .diff-added {
-  background-color: rgba(16, 185, 129, 0.2);
-  color: #6ee7b7;
-  padding: 2px 4px;
-  border-radius: 3px;
+  background-color: #dcfce7;
+  color: #166534;
+  padding: 2px 5px;
+  border-radius: 4px;
   text-decoration: none;
 }
 
 .diff-removed {
-  background-color: rgba(244, 63, 94, 0.2);
-  color: #fda4af;
-  padding: 2px 4px;
-  border-radius: 3px;
+  background-color: #fee2e2;
+  color: #991b1b;
+  padding: 2px 5px;
+  border-radius: 4px;
   text-decoration: line-through;
+}
+
+/* Smooth scroll for anchor links */
+html {
+  scroll-behavior: smooth;
 }

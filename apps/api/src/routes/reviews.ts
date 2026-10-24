@@ -14,7 +14,7 @@ router.get('/:id', authenticate, async (req: Request, res: Response) => {
   const { id } = req.params;
 
   const review = await queryOne(
-    `SELECT id, content_version_id, status, score, started_at, finished_at
+    `SELECT id, content_version_id, status, score, started_at, finished_at, error_message
      FROM reviews
      WHERE id = $1 AND organization_id = $2`,
     [id, orgId]

@@ -17,9 +17,9 @@ const isCloudDb =
 export const pool = new Pool({
   connectionString,
   ssl: isCloudDb ? { rejectUnauthorized: false } : undefined,
-  max: 20,
+  max: 10,
   idleTimeoutMillis: 30000,
-  connectionTimeoutMillis: 10000,
+  connectionTimeoutMillis: 30000,
 });
 
 pool.on('error', (err) => {
@@ -49,6 +49,13 @@ export async function initDb(): Promise<void> {
       await pgvector.registerType(client);
     } catch (err: any) {
       console.warn('[DB] Notice on registerType:', err.message);
+    }
+
+    // 4. Ensure error_message column exists on reviews table
+    try {
+      await client.query('ALTER TABLE reviews ADD COLUMN IF NOT EXISTS error_message TEXT;');
+    } catch (err: any) {
+      console.warn('[DB] Notice on ALTER TABLE reviews:', err.message);
     }
 
     console.log('[DB] Database schema and pgvector initialized successfully.');

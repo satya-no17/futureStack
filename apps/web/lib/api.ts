@@ -74,6 +74,7 @@ export interface ContentDetails {
     id: string;
     status: 'queued' | 'running' | 'done' | 'failed';
     score: number;
+    error_message?: string;
     started_at: string;
     finished_at?: string;
   } | null;

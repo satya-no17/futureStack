@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { CommentItem } from '../lib/api';
-import { MessageSquare, Send, UserCircle, CornerDownRight } from 'lucide-react';
+import { MessageSquare, Send, UserCircle } from 'lucide-react';
 
 interface CommentThreadProps {
   comments: CommentItem[];
@@ -33,18 +33,25 @@ export function CommentThread({
     }
   }
 
+  const roleLabels: Record<string, string> = {
+    creator: 'Writer',
+    reviewer: 'Reviewer',
+    admin: 'Brand Lead',
+    solo: 'Solo Creator'
+  };
+
   return (
     <div className="space-y-4">
-      <div className="flex items-center gap-2 text-sm font-semibold text-stone-200">
-        <MessageSquare className="w-4 h-4 text-amber-500" />
-        <span>Reviewer & Creator Comments ({comments.length})</span>
+      <div className="flex items-center gap-2 text-xs font-bold text-gray-700">
+        <MessageSquare className="w-4 h-4 text-violet-600" />
+        <span>Team Notes & Feedback ({comments.length})</span>
       </div>
 
       {/* Existing Comments List */}
-      <div className="space-y-3 max-h-72 overflow-y-auto pr-1">
+      <div className="space-y-2.5 max-h-72 overflow-y-auto pr-1">
         {comments.length === 0 ? (
-          <div className="p-4 rounded-xl bg-stone-900/40 border border-stone-800 text-center text-xs text-stone-500 italic">
-            No comments yet. Start a discussion on this draft.
+          <div className="p-4 rounded-xl bg-gray-50 border border-gray-100 text-center text-xs text-gray-500 italic">
+            No notes yet. Add thoughts or feedback for this draft below.
           </div>
         ) : (
           comments.map((c) => {
@@ -52,28 +59,28 @@ export function CommentThread({
             return (
               <div
                 key={c.id}
-                className="p-3.5 rounded-xl bg-stone-900/80 border border-stone-800 space-y-1.5"
+                className="p-3.5 rounded-xl bg-gray-50 border border-gray-200/80 space-y-1.5"
               >
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <UserCircle className="w-4 h-4 text-stone-400" />
-                    <span className="text-xs font-bold text-stone-200">{c.author_name}</span>
+                    <UserCircle className="w-4 h-4 text-gray-400" />
+                    <span className="text-xs font-bold text-gray-900">{c.author_name}</span>
                     <span
-                      className={`text-[10px] uppercase font-semibold px-2 py-0.5 rounded-full ${
+                      className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${
                         isReviewer
-                          ? 'bg-emerald-500/15 text-emerald-300 border border-emerald-500/30'
-                          : 'bg-amber-500/15 text-amber-300 border border-amber-500/30'
+                          ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                          : 'bg-violet-50 text-violet-700 border border-violet-200'
                       }`}
                     >
-                      {c.author_role}
+                      {roleLabels[c.author_role] || c.author_role}
                     </span>
                   </div>
-                  <span className="text-[11px] text-stone-500">
+                  <span className="text-[11px] text-gray-400">
                     {new Date(c.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                   </span>
                 </div>
 
-                <p className="text-xs text-stone-300 leading-relaxed pl-6 whitespace-pre-wrap">
+                <p className="text-xs text-gray-700 leading-relaxed pl-6 whitespace-pre-wrap">
                   {c.body}
                 </p>
               </div>
@@ -88,16 +95,16 @@ export function CommentThread({
           type="text"
           value={newComment}
           onChange={(e) => setNewComment(e.target.value)}
-          placeholder="Leave editorial feedback or notes..."
-          className="flex-1 px-3.5 py-2 rounded-xl bg-stone-900 border border-stone-700 text-xs text-white placeholder-stone-500 focus:outline-none focus:ring-1 focus:ring-amber-500"
+          placeholder="Write feedback or notes for the team..."
+          className="flex-1 px-3.5 py-2 rounded-xl bg-white border border-gray-300 text-xs text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-violet-500 shadow-sm"
         />
         <button
           type="submit"
           disabled={!newComment.trim() || isSubmitting}
-          className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-amber-600 hover:bg-amber-500 disabled:opacity-50 text-white text-xs font-semibold transition"
+          className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-gray-900 hover:bg-gray-800 disabled:opacity-50 text-white text-xs font-semibold transition shadow-sm"
         >
           <Send className="w-3.5 h-3.5" />
-          Comment
+          Post Note
         </button>
       </form>
     </div>

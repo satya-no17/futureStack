@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Building2, ArrowRight, ShieldAlert, Sparkles, Check } from 'lucide-react';
+import { Building2, Sparkles, Check, AlertCircle } from 'lucide-react';
 
 export function MultiTenantDemo() {
   const [demoDraft, setDemoDraft] = useState(
@@ -11,29 +11,29 @@ export function MultiTenantDemo() {
   return (
     <div className="space-y-8 max-w-6xl mx-auto">
       {/* Intro banner */}
-      <div className="p-6 rounded-3xl glass-panel border border-stone-800 space-y-3">
+      <div className="p-6 rounded-2xl bg-white border border-gray-200 shadow-sm space-y-4">
         <div className="flex items-center gap-3">
-          <div className="p-2.5 rounded-xl bg-amber-500/15 text-amber-400">
+          <div className="p-2.5 rounded-xl bg-violet-50 text-violet-600">
             <Building2 className="w-5 h-5" />
           </div>
           <div>
-            <h2 className="text-lg font-bold text-white">Multi-Tenant Governance Isolation Demonstration</h2>
-            <p className="text-xs text-stone-400">
-              See how the exact same copy produces completely different audit findings depending on the company&apos;s brand guidelines and verified facts.
+            <h2 className="text-lg font-bold text-gray-900">Compare How Two Different Brands Check the Same Copy</h2>
+            <p className="text-xs text-gray-500">
+              Type any sentence below to see how Brand A (Strict & Formal) and Brand B (Casual & Friendly) give totally different feedback.
             </p>
           </div>
         </div>
 
         <div>
-          <label className="block text-xs font-semibold text-stone-300 mb-1.5">
-            Test Copy Across Both Organizations:
+          <label className="block text-xs font-semibold text-gray-700 mb-1.5">
+            Test Sentence (tested against both brands):
           </label>
           <div className="flex gap-2">
             <input
               type="text"
               value={demoDraft}
               onChange={(e) => setDemoDraft(e.target.value)}
-              className="flex-1 px-4 py-2.5 rounded-xl bg-stone-900 border border-stone-700 text-sm text-white font-mono focus:outline-none focus:ring-1 focus:ring-amber-500"
+              className="flex-1 px-4 py-2.5 rounded-xl bg-white border border-gray-300 text-sm text-gray-900 font-mono focus:outline-none focus:ring-1 focus:ring-violet-500 shadow-sm"
             />
           </div>
         </div>
@@ -42,64 +42,62 @@ export function MultiTenantDemo() {
       {/* Side-by-side Comparison Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Company A: Acme Enterprise Solutions */}
-        <div className="p-6 rounded-3xl glass-panel border border-stone-700 space-y-5 relative overflow-hidden">
-          <div className="absolute top-0 right-0 w-32 h-32 bg-stone-500/10 rounded-full blur-2xl pointer-events-none" />
-
+        <div className="p-6 rounded-2xl bg-white border border-gray-200 shadow-sm space-y-5">
           <div className="flex items-center justify-between">
             <div>
-              <div className="text-xs uppercase font-bold tracking-wider text-amber-400">Tenant A: Enterprise B2B</div>
-              <h3 className="text-base font-extrabold text-white">Acme Enterprise Solutions</h3>
+              <div className="text-xs uppercase font-bold tracking-wider text-gray-400">Brand A • Strict Business</div>
+              <h3 className="text-base font-extrabold text-gray-900">Acme Enterprise</h3>
             </div>
-            <div className="px-3 py-1 rounded-full bg-rose-500/10 border border-rose-500/30 text-rose-400 font-bold text-xs">
-              Score: 40/100 (Failed)
+            <div className="px-3 py-1 rounded-full bg-rose-50 border border-rose-200 text-rose-700 font-bold text-xs">
+              Score: 40/100 (Needs fixes)
             </div>
           </div>
 
-          <div className="p-3.5 rounded-xl bg-black/40 border border-white/5 font-mono text-xs text-gray-300">
+          <div className="p-3.5 rounded-xl bg-gray-50 border border-gray-200 font-mono text-xs text-gray-800">
             &ldquo;{demoDraft}&rdquo;
           </div>
 
           <div className="space-y-2.5">
-            <div className="text-xs font-bold text-gray-300 uppercase tracking-wider">
-              Governance Findings (Strict Formal Rules):
+            <div className="text-xs font-bold text-gray-500 uppercase tracking-wider">
+              Feedback from Acme&apos;s Strict Rules:
             </div>
 
-            <div className="p-3 rounded-xl bg-rose-950/20 border border-rose-500/20 space-y-1">
+            <div className="p-3 rounded-xl bg-rose-50 border border-rose-200 space-y-1">
               <div className="flex items-center justify-between text-xs">
-                <span className="font-bold text-rose-400">Flagged: &ldquo;our app&rdquo;</span>
-                <span className="text-[10px] uppercase font-bold text-amber-400">Tone Rule</span>
+                <span className="font-bold text-rose-800">Flagged: &ldquo;our app&rdquo;</span>
+                <span className="text-[10px] uppercase font-bold text-amber-700">Tone mismatch</span>
               </div>
-              <p className="text-xs text-gray-300">
-                Colloquial term prohibited. Must use &ldquo;our platform&rdquo; or &ldquo;our enterprise solution&rdquo;.
+              <p className="text-xs text-gray-700">
+                Too casual for enterprise. Must use &ldquo;our platform&rdquo; or &ldquo;our enterprise solution&rdquo;.
               </p>
             </div>
 
-            <div className="p-3 rounded-xl bg-rose-950/20 border border-rose-500/20 space-y-1">
+            <div className="p-3 rounded-xl bg-rose-50 border border-rose-200 space-y-1">
               <div className="flex items-center justify-between text-xs">
-                <span className="font-bold text-rose-400">Flagged: &ldquo;#1 fastest tool&rdquo;</span>
-                <span className="text-[10px] uppercase font-bold text-rose-400">Unverified Superlative</span>
+                <span className="font-bold text-rose-800">Flagged: &ldquo;#1 fastest tool&rdquo;</span>
+                <span className="text-[10px] uppercase font-bold text-rose-700">Unproven claim</span>
               </div>
-              <p className="text-xs text-gray-300">
-                No approved benchmark supports a #1 ranking. Suggestion: &ldquo;sub-50ms latency platform&rdquo;.
+              <p className="text-xs text-gray-700">
+                No tested benchmark supports a #1 ranking. Suggestion: &ldquo;sub-50ms latency platform&rdquo;.
               </p>
             </div>
 
-            <div className="p-3 rounded-xl bg-rose-950/20 border border-rose-500/20 space-y-1">
+            <div className="p-3 rounded-xl bg-rose-50 border border-rose-200 space-y-1">
               <div className="flex items-center justify-between text-xs">
-                <span className="font-bold text-rose-400">Flagged: &ldquo;guaranteed&rdquo;</span>
-                <span className="text-[10px] uppercase font-bold text-rose-400">Banned Term</span>
+                <span className="font-bold text-rose-800">Flagged: &ldquo;guaranteed&rdquo;</span>
+                <span className="text-[10px] uppercase font-bold text-rose-700">Word to avoid</span>
               </div>
-              <p className="text-xs text-gray-300">
-                Legal compliance forbids unqualified guarantees. Replace with &ldquo;backed by our 99.95% SLA&rdquo;.
+              <p className="text-xs text-gray-700">
+                Legal rules forbid promises without proof. Replace with &ldquo;backed by our 99.95% SLA&rdquo;.
               </p>
             </div>
 
-            <div className="p-3 rounded-xl bg-rose-950/20 border border-rose-500/20 space-y-1">
+            <div className="p-3 rounded-xl bg-rose-50 border border-rose-200 space-y-1">
               <div className="flex items-center justify-between text-xs">
-                <span className="font-bold text-rose-400">Flagged: &ldquo;millions&rdquo;</span>
-                <span className="text-[10px] uppercase font-bold text-rose-400">Contradicted Fact</span>
+                <span className="font-bold text-rose-800">Flagged: &ldquo;millions&rdquo;</span>
+                <span className="text-[10px] uppercase font-bold text-rose-700">Incorrect fact</span>
               </div>
-              <p className="text-xs text-gray-300">
+              <p className="text-xs text-gray-700">
                 Acme verified specs state 500+ enterprise clients, not millions of consumers.
               </p>
             </div>
@@ -107,55 +105,53 @@ export function MultiTenantDemo() {
         </div>
 
         {/* Company B: Zest Social App */}
-        <div className="p-6 rounded-3xl glass-panel border border-amber-500/30 space-y-5 relative overflow-hidden">
-          <div className="absolute top-0 right-0 w-32 h-32 bg-amber-500/10 rounded-full blur-2xl pointer-events-none" />
-
+        <div className="p-6 rounded-2xl bg-white border border-gray-200 shadow-sm space-y-5">
           <div className="flex items-center justify-between">
             <div>
-              <div className="text-xs uppercase font-bold tracking-wider text-amber-400">Tenant B: Consumer Mobile</div>
-              <h3 className="text-base font-extrabold text-white">Zest Social App</h3>
+              <div className="text-xs uppercase font-bold tracking-wider text-violet-600">Brand B • Friendly Mobile</div>
+              <h3 className="text-base font-extrabold text-gray-900">Zest Social</h3>
             </div>
-            <div className="px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-400 font-bold text-xs">
-              Score: 78/100 (Moderate)
+            <div className="px-3 py-1 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-700 font-bold text-xs">
+              Score: 78/100 (Mostly good)
             </div>
           </div>
 
-          <div className="p-3.5 rounded-xl bg-black/40 border border-white/5 font-mono text-xs text-gray-300">
+          <div className="p-3.5 rounded-xl bg-gray-50 border border-gray-200 font-mono text-xs text-gray-800">
             &ldquo;{demoDraft}&rdquo;
           </div>
 
           <div className="space-y-2.5">
-            <div className="text-xs font-bold text-gray-300 uppercase tracking-wider">
-              Governance Findings (Playful Consumer Rules):
+            <div className="text-xs font-bold text-gray-500 uppercase tracking-wider">
+              Feedback from Zest&apos;s Friendly Rules:
             </div>
 
-            <div className="p-3 rounded-xl bg-emerald-950/20 border border-emerald-500/20 space-y-1">
+            <div className="p-3 rounded-xl bg-emerald-50 border border-emerald-200 space-y-1">
               <div className="flex items-center justify-between text-xs">
-                <span className="font-bold text-emerald-400">&ldquo;our app&rdquo; APPROVED</span>
-                <span className="text-[10px] uppercase font-bold text-emerald-400">Brand Safe</span>
+                <span className="font-bold text-emerald-800">&ldquo;our app&rdquo; Approved ✓</span>
+                <span className="text-[10px] uppercase font-bold text-emerald-700">Fits Brand</span>
               </div>
-              <p className="text-xs text-gray-300">
-                &ldquo;Our app&rdquo; fits Zest&apos;s conversational and friendly mobile identity perfectly!
+              <p className="text-xs text-gray-700">
+                &ldquo;Our app&rdquo; fits Zest&apos;s friendly, conversational style perfectly!
               </p>
             </div>
 
-            <div className="p-3 rounded-xl bg-amber-950/20 border border-amber-500/20 space-y-1">
+            <div className="p-3 rounded-xl bg-amber-50 border border-amber-200 space-y-1">
               <div className="flex items-center justify-between text-xs">
-                <span className="font-bold text-amber-400">Flagged: &ldquo;#1 fastest tool&rdquo;</span>
-                <span className="text-[10px] uppercase font-bold text-amber-400">Informal Superlative</span>
+                <span className="font-bold text-amber-800">Flagged: &ldquo;#1 fastest tool&rdquo;</span>
+                <span className="text-[10px] uppercase font-bold text-amber-700">Unproven claim</span>
               </div>
-              <p className="text-xs text-gray-300">
+              <p className="text-xs text-gray-700">
                 Better to highlight the 4.8 star App Store rating rather than an unverified #1 claim.
               </p>
             </div>
 
-            <div className="p-3 rounded-xl bg-rose-950/20 border border-rose-500/20 space-y-1">
+            <div className="p-3 rounded-xl bg-rose-50 border border-rose-200 space-y-1">
               <div className="flex items-center justify-between text-xs">
-                <span className="font-bold text-rose-400">Flagged: &ldquo;millions&rdquo;</span>
-                <span className="text-[10px] uppercase font-bold text-rose-400">Contradicted Fact</span>
+                <span className="font-bold text-rose-800">Flagged: &ldquo;millions&rdquo;</span>
+                <span className="text-[10px] uppercase font-bold text-rose-700">Incorrect fact</span>
               </div>
-              <p className="text-xs text-gray-300">
-                Zest verified facts confirm 500,000 active community members, not millions yet.
+              <p className="text-xs text-gray-700">
+                Zest facts confirm 500,000 active community members, not millions yet.
               </p>
             </div>
           </div>

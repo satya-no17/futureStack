@@ -115,7 +115,10 @@ export async function claimCheck(
     }
 
     return issues;
-  } catch (err) {
+  } catch (err: any) {
+    if (err?.message?.includes('AI not responded')) {
+      throw err;
+    }
     console.error('[ClaimCheck] Error during claim check:', err);
     return [];
   }

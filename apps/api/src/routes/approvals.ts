@@ -6,7 +6,7 @@ import { requireRole } from '../middleware/requireRole';
 const router = Router();
 
 // GET /approvals/queue
-router.get('/queue', authenticate, requireRole('reviewer', 'admin'), async (req: Request, res: Response) => {
+router.get('/queue', authenticate, async (req: Request, res: Response) => {
   const orgId = req.user!.orgId;
 
   const queue = await query(

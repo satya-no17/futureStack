@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { Issue } from '../lib/api';
-import { AlertCircle, Check, X, Edit3, BookOpen, Sparkles, CheckCircle2 } from 'lucide-react';
+import { Check, Edit3, BookOpen, Sparkles, CheckCircle2 } from 'lucide-react';
 
 interface IssueCardProps {
   issue: Issue;
@@ -20,22 +20,29 @@ export function IssueCard({
   onDismiss
 }: IssueCardProps) {
   const [isDismissing, setIsDismissing] = useState(false);
-  const [dismissReason, setDismissReason] = useState('Approved by legal team for this campaign');
+  const [dismissReason, setDismissReason] = useState('Approved by team lead for this campaign');
   const [isEditingSuggestion, setIsEditingSuggestion] = useState(false);
   const [customSuggestion, setCustomSuggestion] = useState(issue.suggestion);
 
-  let severityBadge = 'bg-rose-500/20 text-rose-300 border-rose-500/30';
-  if (issue.severity === 'medium') severityBadge = 'bg-amber-500/20 text-amber-300 border-amber-500/30';
-  if (issue.severity === 'low') severityBadge = 'bg-cyan-500/20 text-cyan-300 border-cyan-500/30';
+  let severityBadge = 'bg-red-50 text-red-700 border-red-200';
+  let severityLabel = 'Must Fix';
+  if (issue.severity === 'medium') {
+    severityBadge = 'bg-amber-50 text-amber-700 border-amber-200';
+    severityLabel = 'Should Fix';
+  }
+  if (issue.severity === 'low') {
+    severityBadge = 'bg-sky-50 text-sky-700 border-sky-200';
+    severityLabel = 'Tip';
+  }
 
   const typeLabels: Record<string, string> = {
-    banned_term: 'Banned Term',
-    outdated_term: 'Outdated Term',
-    contradicted_claim: 'Contradicted Claim',
-    unverified_claim: 'Unverified Claim',
-    tone: 'Brand Tone Mismatch',
-    accessibility: 'Accessibility & Readability',
-    visual: 'Visual Governance'
+    banned_term: 'Word to avoid',
+    outdated_term: 'Old term',
+    contradicted_claim: 'Incorrect fact',
+    unverified_claim: 'Unproven claim',
+    tone: 'Tone mismatch',
+    accessibility: 'Hard to read',
+    visual: 'Visual style'
   };
 
   const isResolved = issue.status !== 'open';
@@ -45,71 +52,71 @@ export function IssueCard({
       onClick={onSelect}
       className={`p-5 rounded-2xl transition-all duration-200 border cursor-pointer ${
         isSelected
-          ? 'bg-stone-850 border-amber-500/80 shadow-lg shadow-amber-500/10 ring-1 ring-amber-500/30'
-          : 'bg-stone-900/80 border-stone-800 hover:border-stone-700 hover:bg-stone-850'
-      } ${isResolved ? 'opacity-50 grayscale-[50%]' : ''}`}
+          ? 'bg-violet-50/30 border-violet-400 shadow-md ring-1 ring-violet-400/20'
+          : 'bg-white border-gray-200 hover:border-gray-300 hover:shadow-sm'
+      } ${isResolved ? 'opacity-60 bg-gray-50/70' : ''}`}
     >
       {/* Header tags */}
       <div className="flex items-center justify-between gap-2 mb-3">
         <div className="flex items-center gap-2">
-          <span className={`px-2.5 py-0.5 rounded-full text-xs font-bold border uppercase tracking-wider ${severityBadge}`}>
-            {issue.severity}
+          <span className={`px-2.5 py-0.5 rounded-full text-xs font-bold border ${severityBadge}`}>
+            {severityLabel}
           </span>
-          <span className="text-xs font-medium text-stone-300 bg-stone-800 px-2.5 py-0.5 rounded-full border border-stone-700/60">
+          <span className="text-xs font-medium text-gray-600 bg-gray-100 px-2.5 py-0.5 rounded-full border border-gray-200">
             {typeLabels[issue.type] || issue.type}
           </span>
         </div>
 
         {issue.status === 'accepted' && (
-          <span className="inline-flex items-center gap-1 text-xs text-emerald-400 font-medium">
-            <CheckCircle2 className="w-3.5 h-3.5" /> Accepted
+          <span className="inline-flex items-center gap-1 text-xs text-emerald-600 font-semibold">
+            <CheckCircle2 className="w-3.5 h-3.5" /> Fix applied
           </span>
         )}
         {issue.status === 'dismissed' && (
-          <span className="inline-flex items-center gap-1 text-xs text-stone-400 font-medium italic">
-            Dismissed ({issue.dismiss_reason || 'Manual override'})
+          <span className="inline-flex items-center gap-1 text-xs text-gray-500 font-medium italic">
+            Skipped ({issue.dismiss_reason || 'Manual override'})
           </span>
         )}
       </div>
 
-      {/* Quoted problem text */}
+      {/* Flagged problem text */}
       <div className="mb-3">
-        <div className="text-xs text-stone-400 uppercase tracking-wider font-semibold mb-1">
-          Flagged Text:
+        <div className="text-xs text-gray-500 font-semibold mb-1">
+          Problem words:
         </div>
-        <div className="px-3 py-1.5 rounded-lg bg-black/50 border border-stone-800 font-mono text-xs text-rose-300 font-medium inline-block">
+        <div className="px-3 py-1.5 rounded-lg bg-red-50/80 border border-red-200/80 font-mono text-xs text-red-800 font-medium inline-block">
           &ldquo;{issue.quote}&rdquo;
         </div>
       </div>
 
       {/* Explanation */}
-      <p className="text-xs text-stone-200 mb-3 leading-relaxed">
+      <p className="text-xs text-gray-700 mb-3 leading-relaxed">
         {issue.explanation}
       </p>
 
       {/* Source citation */}
       {issue.source_ref && (
-        <div className="flex items-center gap-1.5 text-xs text-amber-300/90 bg-amber-500/10 px-3 py-1.5 rounded-lg border border-amber-500/20 mb-4">
+        <div className="flex items-center gap-1.5 text-xs text-violet-700 bg-violet-50/70 px-3 py-1.5 rounded-lg border border-violet-100 mb-4">
           <BookOpen className="w-3.5 h-3.5 flex-shrink-0" />
-          <span className="font-semibold text-amber-200">Rule Citation:</span>
+          <span className="font-semibold text-violet-800">Rule:</span>
           <span className="truncate">{issue.source_ref}</span>
         </div>
       )}
 
       {/* Suggestion box & Actions */}
       {issue.status === 'open' && (
-        <div className="mt-4 pt-3 border-t border-white/10">
+        <div className="mt-4 pt-3 border-t border-gray-100">
           <div className="flex items-center justify-between mb-2">
-            <div className="flex items-center gap-1.5 text-xs font-semibold text-emerald-400">
+            <div className="flex items-center gap-1.5 text-xs font-bold text-emerald-700">
               <Sparkles className="w-3.5 h-3.5" />
-              Intent-Preserving Rewrite:
+              Suggested fix:
             </div>
             <button
               onClick={(e) => {
                 e.stopPropagation();
                 setIsEditingSuggestion(!isEditingSuggestion);
               }}
-              className="text-xs text-gray-400 hover:text-white flex items-center gap-1 transition"
+              className="text-xs text-gray-500 hover:text-gray-900 flex items-center gap-1 transition"
             >
               <Edit3 className="w-3 h-3" />
               {isEditingSuggestion ? 'Cancel' : 'Edit'}
@@ -122,11 +129,11 @@ export function IssueCard({
                 type="text"
                 value={customSuggestion}
                 onChange={(e) => setCustomSuggestion(e.target.value)}
-                className="w-full px-3 py-2 rounded-lg bg-black/50 border border-emerald-500/50 text-sm text-white focus:outline-none focus:ring-1 focus:ring-emerald-400"
+                className="w-full px-3 py-2 rounded-lg bg-white border border-emerald-400 text-sm text-gray-900 focus:outline-none focus:ring-1 focus:ring-emerald-500 shadow-sm"
               />
             </div>
           ) : (
-            <div className="p-3 rounded-xl bg-emerald-950/20 border border-emerald-500/30 text-emerald-200 text-sm font-medium mb-3">
+            <div className="p-3 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-900 text-sm font-medium mb-3">
               &ldquo;{issue.suggestion || 'Review manually'}&rdquo;
             </div>
           )}
@@ -135,37 +142,37 @@ export function IssueCard({
           <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
             <button
               onClick={() => onAccept(isEditingSuggestion ? customSuggestion : issue.suggestion)}
-              className="flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold transition shadow-sm"
+              className="flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition shadow-sm"
             >
               <Check className="w-3.5 h-3.5" />
-              Accept Fix
+              Use This Fix
             </button>
 
             <button
               onClick={() => setIsDismissing(!isDismissing)}
-              className="px-3 py-2 rounded-xl bg-white/5 hover:bg-white/10 text-gray-300 text-xs font-medium border border-white/10 transition"
+              className="px-3 py-2 rounded-xl bg-white hover:bg-gray-50 text-gray-600 hover:text-gray-900 text-xs font-medium border border-gray-200 transition shadow-sm"
             >
-              Dismiss
+              Skip
             </button>
           </div>
 
           {/* Dismiss reason drawer */}
           {isDismissing && (
-            <div className="mt-3 p-3 rounded-xl bg-black/40 border border-white/10" onClick={(e) => e.stopPropagation()}>
-              <label className="block text-xs font-semibold text-gray-300 mb-1">
-                Reason for Dismissal:
+            <div className="mt-3 p-3.5 rounded-xl bg-gray-50 border border-gray-200" onClick={(e) => e.stopPropagation()}>
+              <label className="block text-xs font-semibold text-gray-700 mb-1">
+                Why are you skipping this?
               </label>
               <input
                 type="text"
                 value={dismissReason}
                 onChange={(e) => setDismissReason(e.target.value)}
-                placeholder="e.g. Approved exception by VP of Marketing"
-                className="w-full px-2.5 py-1.5 rounded-lg bg-stone-900 border border-stone-700 text-xs text-white mb-2 focus:outline-none focus:border-amber-500"
+                placeholder="e.g. Approved exception by team lead"
+                className="w-full px-2.5 py-1.5 rounded-lg bg-white border border-gray-300 text-xs text-gray-900 mb-2 focus:outline-none focus:border-violet-500 shadow-sm"
               />
               <div className="flex justify-end gap-2">
                 <button
                   onClick={() => setIsDismissing(false)}
-                  className="px-2 py-1 text-xs text-gray-400 hover:text-white"
+                  className="px-2.5 py-1 text-xs text-gray-500 hover:text-gray-900"
                 >
                   Cancel
                 </button>
@@ -174,9 +181,9 @@ export function IssueCard({
                     onDismiss(dismissReason);
                     setIsDismissing(false);
                   }}
-                  className="px-3 py-1 rounded-lg bg-rose-600/80 hover:bg-rose-500 text-white text-xs font-semibold"
+                  className="px-3 py-1 rounded-lg bg-gray-900 hover:bg-gray-800 text-white text-xs font-semibold shadow-sm"
                 >
-                  Confirm Dismiss
+                  Confirm Skip
                 </button>
               </div>
             </div>

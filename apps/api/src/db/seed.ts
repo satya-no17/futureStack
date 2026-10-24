@@ -1,9 +1,7 @@
 import bcrypt from 'bcryptjs';
-import pgvector from 'pgvector/pg';
-import { pool, query, queryOne, initDb } from './index';
+import { query, queryOne, initDb } from './index';
 import { chunkDocument } from '../services/ingestion/chunk';
 import { storeGuidelineChunks, storeFactChunks } from '../services/ingestion/store';
-import { runReviewPipeline } from '../services/review';
 import { logAudit } from '../services/audit';
 
 export async function seedDatabase(): Promise<void> {
@@ -88,7 +86,7 @@ Never declare Acme as "#1" or "the single best" in marketing collateral unless c
   const acmeGuideChunks = chunkDocument(acmeGuideText, 'Acme Brand Voice');
   await storeGuidelineChunks(acmeId, acmeGuide!.id, acmeGuideChunks);
 
-  // Acme Approved Facts (16 facts)
+  // Acme Approved Facts
   const acmeFactsText = `
 # Acme Enterprise Fact Sheet & Specifications
 
@@ -119,8 +117,164 @@ Never declare Acme as "#1" or "the single best" in marketing collateral unless c
   const acmeFactChunks = chunkDocument(acmeFactsText, 'Acme Technical Specs');
   await storeFactChunks(acmeId, acmeFactsDoc!.id, acmeFactChunks);
 
+  // Acme Draft 1: Reviewed with open issues
+  const draft1 = await queryOne<{ id: string }>(
+    `INSERT INTO contents (organization_id, created_by, title, channel, status, latest_score)
+     VALUES ($1, $2, 'Q4 Enterprise Launch LinkedIn Announcement', 'LinkedIn', 'reviewed', 45) RETURNING id`,
+    [acmeId, acmeCreator!.id]
+  );
+  const draft1Body = `Our app is the #1 fastest tool, guaranteed! Trusted by millions of businesses to handle data pipelines with cheap pricing and zero downtime.`;
+  const draft1Ver = await queryOne<{ id: string }>(
+    `INSERT INTO content_versions (organization_id, content_id, version_no, body, created_by)
+     VALUES ($1, $2, 1, $3, $4) RETURNING id`,
+    [acmeId, draft1!.id, draft1Body, acmeCreator!.id]
+  );
+  await query(`UPDATE contents SET current_version_id = $1 WHERE id = $2`, [draft1Ver!.id, draft1!.id]);
+
+  const review1 = await queryOne<{ id: string }>(
+    `INSERT INTO reviews (organization_id, content_version_id, status, score, finished_at)
+     VALUES ($1, $2, 'done', 45, CURRENT_TIMESTAMP) RETURNING id`,
+    [acmeId, draft1Ver!.id]
+  );
+
+  const acmeIssues = [
+    {
+      type: 'tone',
+      sev: 'medium',
+      quote: 'Our app',
+      start: 0,
+      end: 7,
+      exp: 'Colloquial phrasing violates enterprise brand standards. Refer to software as platform or solution.',
+      source: 'Acme Brand Voice Guide §2',
+      sug: 'Our enterprise platform'
+    },
+    {
+      type: 'unverified_claim',
+      sev: 'high',
+      quote: '#1 fastest tool',
+      start: 15,
+      end: 30,
+      exp: 'No approved industry benchmark certifies #1 speed ranking. Superlatives create compliance exposure.',
+      source: 'Acme Brand Voice Guide §3',
+      sug: 'sub-50ms latency platform'
+    },
+    {
+      type: 'banned_term',
+      sev: 'high',
+      quote: 'guaranteed',
+      start: 32,
+      end: 42,
+      exp: 'Unqualified performance guarantees violate corporate legal guidelines.',
+      source: 'Acme Banned Vocabulary Rule',
+      sug: 'backed by our 99.95% SLA'
+    },
+    {
+      type: 'contradicted_claim',
+      sev: 'high',
+      quote: 'millions of businesses',
+      start: 55,
+      end: 77,
+      exp: 'Acme verified client records document 500+ enterprise clients, not millions of consumer accounts.',
+      source: 'Acme Technical Specs Fact #5 & #7',
+      sug: 'over 500 enterprise clients'
+    },
+    {
+      type: 'banned_term',
+      sev: 'high',
+      quote: 'cheap pricing',
+      start: 110,
+      end: 123,
+      exp: 'The word cheap degrades product standing and diminishes Fortune 500 brand perception.',
+      source: 'Acme Banned Vocabulary Rule',
+      sug: 'cost-effective plans starting at $499/mo'
+    }
+  ];
+
+  for (const iss of acmeIssues) {
+    await query(
+      `INSERT INTO issues (organization_id, review_id, type, severity, quote, start_idx, end_idx, explanation, source_ref, suggestion, status)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, 'open')`,
+      [acmeId, review1!.id, iss.type, iss.sev, iss.quote, iss.start, iss.end, iss.exp, iss.source, iss.sug]
+    );
+  }
+
+  // Acme Draft 2: Submitted waiting in review queue
+  const draft2 = await queryOne<{ id: string }>(
+    `INSERT INTO contents (organization_id, created_by, title, channel, status, latest_score)
+     VALUES ($1, $2, 'SOC2 Security Certification Press Release', 'Press Release', 'submitted', 92) RETURNING id`,
+    [acmeId, acmeCreator!.id]
+  );
+  const draft2Body = `Acme is pleased to announce completion of our annual SOC2 Type II audit. Our enterprise platform continues to deliver 99.95% uptime SLA for Fortune 500 clients.`;
+  const draft2Ver = await queryOne<{ id: string }>(
+    `INSERT INTO content_versions (organization_id, content_id, version_no, body, created_by)
+     VALUES ($1, $2, 1, $3, $4) RETURNING id`,
+    [acmeId, draft2!.id, draft2Body, acmeCreator!.id]
+  );
+  await query(`UPDATE contents SET current_version_id = $1 WHERE id = $2`, [draft2Ver!.id, draft2!.id]);
+
+  const review2 = await queryOne<{ id: string }>(
+    `INSERT INTO reviews (organization_id, content_version_id, status, score, finished_at)
+     VALUES ($1, $2, 'done', 92, CURRENT_TIMESTAMP) RETURNING id`,
+    [acmeId, draft2Ver!.id]
+  );
+  await query(
+    `INSERT INTO comments (organization_id, content_id, version_id, author_id, body)
+     VALUES ($1, $2, $3, $4, 'Great work! The citation of our SOC2 compliance and 99.95% SLA matches our verified specs perfectly.')`,
+    [acmeId, draft2!.id, draft2Ver!.id, acmeReviewer!.id]
+  );
+
+  // Acme Draft 3: Published
+  const draft3 = await queryOne<{ id: string }>(
+    `INSERT INTO contents (organization_id, created_by, title, channel, status, latest_score)
+     VALUES ($1, $2, 'Annual Engineering Uptime Report', 'Blog', 'published', 100) RETURNING id`,
+    [acmeId, acmeAdmin!.id]
+  );
+  const draft3Body = `In our annual reliability audit, Acme delivered 99.98% actual uptime across all geographic regions, outperforming our contractual 99.95% SLA commitment.`;
+  const draft3Ver = await queryOne<{ id: string }>(
+    `INSERT INTO content_versions (organization_id, content_id, version_no, body, created_by)
+     VALUES ($1, $2, 1, $3, $4) RETURNING id`,
+    [acmeId, draft3!.id, draft3Body, acmeAdmin!.id]
+  );
+  await query(`UPDATE contents SET current_version_id = $1 WHERE id = $2`, [draft3Ver!.id, draft3!.id]);
+
+  // Acme Draft 4: Changes Requested
+  const draft4 = await queryOne<{ id: string }>(
+    `INSERT INTO contents (organization_id, created_by, title, channel, status, latest_score)
+     VALUES ($1, $2, 'Stream Engine Latency Benchmark', 'Blog', 'changes_requested', 72) RETURNING id`,
+    [acmeId, acmeCreator!.id]
+  );
+  const draft4Body = `Our crazy fast data pipeline processes over 12 billion events daily with instant failover support for enterprise clients.`;
+  const draft4Ver = await queryOne<{ id: string }>(
+    `INSERT INTO content_versions (organization_id, content_id, version_no, body, created_by)
+     VALUES ($1, $2, 1, $3, $4) RETURNING id`,
+    [acmeId, draft4!.id, draft4Body, acmeCreator!.id]
+  );
+  await query(`UPDATE contents SET current_version_id = $1 WHERE id = $2`, [draft4Ver!.id, draft4!.id]);
+  const review4 = await queryOne<{ id: string }>(
+    `INSERT INTO reviews (organization_id, content_version_id, status, score, finished_at)
+     VALUES ($1, $2, 'done', 72, CURRENT_TIMESTAMP) RETURNING id`,
+    [acmeId, draft4Ver!.id]
+  );
+  await query(
+    `INSERT INTO issues (organization_id, review_id, type, severity, quote, start_idx, end_idx, explanation, source_ref, suggestion, status)
+     VALUES ($1, $2, 'banned_term', 'high', 'crazy fast', 4, 14, 'Informal hyperbole not permitted in brand copy.', 'Acme Banned Vocabulary', 'sub-50ms latency', 'open')`,
+    [acmeId, review4!.id]
+  );
+  await query(
+    `INSERT INTO comments (organization_id, content_id, version_id, author_id, body)
+     VALUES ($1, $2, $3, $4, 'Please replace crazy fast with exact median latency specs before we can sign off on this post.')`,
+    [acmeId, draft4!.id, draft4Ver!.id, acmeReviewer!.id]
+  );
+
+  // Acme Audit Logs
+  await logAudit(acmeId, acmeAdmin!.id, 'system_seed', 'organization', acmeId, { description: 'Workspace configured' });
+  await logAudit(acmeId, acmeCreator!.id, 'create_content', 'content', draft1!.id, { title: 'Q4 Enterprise Launch LinkedIn Announcement' });
+  await logAudit(acmeId, acmeCreator!.id, 'submit_content', 'content', draft2!.id, { title: 'SOC2 Security Certification Press Release' });
+  await logAudit(acmeId, acmeAdmin!.id, 'publish_content', 'content', draft3!.id, { title: 'Annual Engineering Uptime Report' });
+  await logAudit(acmeId, acmeReviewer!.id, 'request_changes', 'content', draft4!.id, { note: 'Please replace crazy fast with exact latency specs' });
+
   // ==========================================
-  // 2. ZEST SOCIAL APP (Consumer, Playful)
+  // 2. ZEST SOCIAL APP (Consumer Playful)
   // ==========================================
   console.log('[Seed] Seeding Zest Social App...');
   const zestOrg = await queryOne<{ id: string }>(
@@ -128,7 +282,6 @@ Never declare Acme as "#1" or "the single best" in marketing collateral unless c
   );
   const zestId = zestOrg!.id;
 
-  // Zest Users
   const zestAdmin = await queryOne<{ id: string }>(
     `INSERT INTO users (organization_id, name, email, password_hash, role)
      VALUES ($1, 'Chloe Director', 'admin@zest.io', $2, 'admin') RETURNING id`,
@@ -145,7 +298,6 @@ Never declare Acme as "#1" or "the single best" in marketing collateral unless c
     [zestId, passwordHash]
   );
 
-  // Zest Banned Terms (Corporate stiff terms banned!)
   const zestBanned = [
     { term: 'synergistic', rep: 'fun and connected', reason: 'Stiff corporate jargon forbidden in consumer app.', sev: 'high' },
     { term: 'enterprise-grade', rep: 'super smooth', reason: 'Zest is a casual consumer product, not enterprise B2B.', sev: 'high' },
@@ -163,15 +315,9 @@ Never declare Acme as "#1" or "the single best" in marketing collateral unless c
     );
   }
 
-  // Zest Guidelines
   const zestGuideText = `
 # Zest Social App Voice & Creative Guidelines
-
-## 1. Brand Personality
-Zest is playful, vibrant, conversational, and energetic! We love emojis, friendly banter, and direct address ("you", "besties", "friends"). We talk like an excited creative friend sharing a cool discovery, never like a corporate compliance officer.
-
-## 2. Style Rules
-Use short punchy sentences. Emojis are warmly encouraged! Avoid corporate speak, bureaucratic jargon, or pretentious vocabulary.
+Zest is playful, vibrant, conversational, and energetic! We love emojis, friendly banter, and direct address. Use short punchy sentences. Avoid corporate speak, bureaucratic jargon, or pretentious vocabulary.
 `;
   const zestGuide = await queryOne<{ id: string }>(
     `INSERT INTO guidelines (organization_id, title, kind, file_url)
@@ -181,11 +327,8 @@ Use short punchy sentences. Emojis are warmly encouraged! Avoid corporate speak,
   const zestGuideChunks = chunkDocument(zestGuideText, 'Zest Brand Playbook');
   await storeGuidelineChunks(zestId, zestGuide!.id, zestGuideChunks);
 
-  // Zest Approved Facts
   const zestFactsText = `
 # Zest Verified Facts
-
-## 1. Community and Platform Metrics
 - Fact 1: Zest has over 500,000 active community members worldwide.
 - Fact 2: Available on iOS App Store and Google Play Store with a 4.8 star average rating.
 - Fact 3: Over 2 million creative photos and reels shared each week.
@@ -199,8 +342,76 @@ Use short punchy sentences. Emojis are warmly encouraged! Avoid corporate speak,
   const zestFactChunks = chunkDocument(zestFactsText, 'Zest Community Facts');
   await storeFactChunks(zestId, zestFactsDoc!.id, zestFactChunks);
 
+  // Zest Draft 1: Reviewed
+  const zDraft1 = await queryOne<{ id: string }>(
+    `INSERT INTO contents (organization_id, created_by, title, channel, status, latest_score)
+     VALUES ($1, $2, 'Weekend Photo Challenge Announcement', 'Twitter / X', 'reviewed', 78) RETURNING id`,
+    [zestId, zestCreator!.id]
+  );
+  const zDraft1Body = `Hey besties! Ready for our weekend photo challenge? Share your coolest sunset photos and tag our app! The #1 fastest poster wins custom profile badges!`;
+  const zDraft1Ver = await queryOne<{ id: string }>(
+    `INSERT INTO content_versions (organization_id, content_id, version_no, body, created_by)
+     VALUES ($1, $2, 1, $3, $4) RETURNING id`,
+    [zestId, zDraft1!.id, zDraft1Body, zestCreator!.id]
+  );
+  await query(`UPDATE contents SET current_version_id = $1 WHERE id = $2`, [zDraft1Ver!.id, zDraft1!.id]);
+  const zReview1 = await queryOne<{ id: string }>(
+    `INSERT INTO reviews (organization_id, content_version_id, status, score, finished_at)
+     VALUES ($1, $2, 'done', 78, CURRENT_TIMESTAMP) RETURNING id`,
+    [zestId, zDraft1Ver!.id]
+  );
+  await query(
+    `INSERT INTO issues (organization_id, review_id, type, severity, quote, start_idx, end_idx, explanation, source_ref, suggestion, status)
+     VALUES ($1, $2, 'unverified_claim', 'medium', '#1 fastest poster', 113, 131, 'Avoid superlative ranking; emphasize creative participation instead.', 'Zest Playbook §2', 'most creative photo', 'open')`,
+    [zestId, zReview1!.id]
+  );
+
+  // Zest Draft 2: Submitted in Queue
+  const zDraft2 = await queryOne<{ id: string }>(
+    `INSERT INTO contents (organization_id, created_by, title, channel, status, latest_score)
+     VALUES ($1, $2, 'New Creator Filters & Sticker Packs Release', 'Blog', 'submitted', 96) RETURNING id`,
+    [zestId, zestCreator!.id]
+  );
+  const zDraft2Body = `We just dropped 20 brand new creator filters and animated sticker packs! Try them out today with all your friends and share your story.`;
+  const zDraft2Ver = await queryOne<{ id: string }>(
+    `INSERT INTO content_versions (organization_id, content_id, version_no, body, created_by)
+     VALUES ($1, $2, 1, $3, $4) RETURNING id`,
+    [zestId, zDraft2!.id, zDraft2Body, zestCreator!.id]
+  );
+  await query(`UPDATE contents SET current_version_id = $1 WHERE id = $2`, [zDraft2Ver!.id, zDraft2!.id]);
+  await query(
+    `INSERT INTO reviews (organization_id, content_version_id, status, score, finished_at)
+     VALUES ($1, $2, 'done', 96, CURRENT_TIMESTAMP)`,
+    [zestId, zDraft2Ver!.id]
+  );
+  await query(
+    `INSERT INTO comments (organization_id, content_id, version_id, author_id, body)
+     VALUES ($1, $2, $3, $4, 'Love the tone here! Clean, upbeat, and fits our mobile community guidelines.')`,
+    [zestId, zDraft2!.id, zDraft2Ver!.id, zestReviewer!.id]
+  );
+
+  // Zest Draft 3: Published
+  const zDraft3 = await queryOne<{ id: string }>(
+    `INSERT INTO contents (organization_id, created_by, title, channel, status, latest_score)
+     VALUES ($1, $2, 'Zest Celebrates 500,000 Community Members!', 'LinkedIn', 'published', 100) RETURNING id`,
+    [zestId, zestAdmin!.id]
+  );
+  const zDraft3Body = `We hit 500,000 active community members on Zest! Thank you to every creator sharing photos and stories with us every single day.`;
+  const zDraft3Ver = await queryOne<{ id: string }>(
+    `INSERT INTO content_versions (organization_id, content_id, version_no, body, created_by)
+     VALUES ($1, $2, 1, $3, $4) RETURNING id`,
+    [zestId, zDraft3!.id, zDraft3Body, zestAdmin!.id]
+  );
+  await query(`UPDATE contents SET current_version_id = $1 WHERE id = $2`, [zDraft3Ver!.id, zDraft3!.id]);
+
+  // Zest Audit Logs
+  await logAudit(zestId, zestAdmin!.id, 'system_seed', 'organization', zestId, { description: 'Zest workspace loaded' });
+  await logAudit(zestId, zestCreator!.id, 'create_content', 'content', zDraft1!.id, { title: 'Weekend Photo Challenge Announcement' });
+  await logAudit(zestId, zestCreator!.id, 'submit_content', 'content', zDraft2!.id, { title: 'New Creator Filters & Sticker Packs Release' });
+  await logAudit(zestId, zestAdmin!.id, 'publish_content', 'content', zDraft3!.id, { title: 'Zest Celebrates 500,000 Community Members!' });
+
   // ==========================================
-  // 3. SOLO WORKSPACE (One-person org)
+  // 3. SOLO WORKSPACE (One-person studio)
   // ==========================================
   console.log('[Seed] Seeding Solo Workspace...');
   const soloOrg = await queryOne<{ id: string }>(
@@ -208,101 +419,118 @@ Use short punchy sentences. Emojis are warmly encouraged! Avoid corporate speak,
   );
   const soloId = soloOrg!.id;
 
-  await query(
+  const soloUser = await queryOne<{ id: string }>(
     `INSERT INTO users (organization_id, name, email, password_hash, role)
-     VALUES ($1, 'Sam Solo', 'solo@creator.dev', $2, 'solo')`,
+     VALUES ($1, 'Sam Solo', 'solo@creator.dev', $2, 'solo') RETURNING id`,
     [soloId, passwordHash]
   );
 
-  // ==========================================
-  // 4. PRE-SEEDED DRAFTS & WORKFLOW DEMO DATA
-  // ==========================================
-  console.log('[Seed] Seeding sample content drafts and reviews...');
+  const soloBanned = [
+    { term: 'cheap', rep: 'accessible', reason: 'Cheap makes development work feel rushed or low quality.', sev: 'high' },
+    { term: 'guaranteed', rep: 'designed for reliability', reason: 'Overpromising creates unrealistic expectations.', sev: 'high' },
+    { term: 'hack', rep: 'workflow technique', reason: 'Maintain technical professionalism in published guides.', sev: 'medium' },
+    { term: '100% risk free', rep: 'straightforward setup', reason: 'Sensational marketing phrasing.', sev: 'high' },
+    { term: 'blast', rep: 'send', reason: 'Email marketing buzzword.', sev: 'low' }
+  ];
 
-  // Draft 1: Demo Plan canonical test draft in Acme (Pending review / Initial state)
-  const draft1 = await queryOne<{ id: string }>(
-    `INSERT INTO contents (organization_id, created_by, title, channel, status, latest_score)
-     VALUES ($1, $2, 'Q4 Enterprise Launch LinkedIn Announcement', 'LinkedIn', 'draft', 45) RETURNING id`,
-    [acmeId, acmeCreator!.id]
+  for (const b of soloBanned) {
+    await query(
+      `INSERT INTO banned_terms (organization_id, term, preferred_replacement, reason, severity)
+       VALUES ($1, $2, $3, $4, $5)`,
+      [soloId, b.term, b.rep, b.reason, b.sev]
+    );
+  }
+
+  const soloGuideText = `
+# Solo Creator Tech & Craft Handbook
+Authentic, developer-friendly, and practical. Write direct tutorials and breakdown posts that respect the reader's time. Always explain trade-offs and never overpromise easy shortcuts.
+`;
+  const soloGuide = await queryOne<{ id: string }>(
+    `INSERT INTO guidelines (organization_id, title, kind, file_url)
+     VALUES ($1, 'Solo Studio Tech & Voice Guidelines', 'voice', 'solo_guide.md') RETURNING id`,
+    [soloId]
   );
+  const soloGuideChunks = chunkDocument(soloGuideText, 'Solo Voice Handbook');
+  await storeGuidelineChunks(soloId, soloGuide!.id, soloGuideChunks);
 
-  const draft1Body = `Our app is the #1 fastest tool, guaranteed! Trusted by millions of businesses to handle data pipelines with cheap pricing and zero downtime.`;
-  const draft1Ver1 = await queryOne<{ id: string }>(
+  const soloFactsText = `
+# Solo Studio Portfolio & Stats
+- Fact 1: Over 45,000 YouTube subscribers and developer community members.
+- Fact 2: Author of 12 open source utilities with over 200,000 combined downloads.
+- Fact 3: Solo indie software engineer and educator active since 2023.
+`;
+  const soloFactsDoc = await queryOne<{ id: string }>(
+    `INSERT INTO fact_documents (organization_id, title, file_url, effective_date)
+     VALUES ($1, 'Solo Studio Verified Facts', 'solo_facts.md', CURRENT_DATE) RETURNING id`,
+    [soloId]
+  );
+  const soloFactChunks = chunkDocument(soloFactsText, 'Solo Studio Facts');
+  await storeFactChunks(soloId, soloFactsDoc!.id, soloFactChunks);
+
+  // Solo Draft 1: Reviewed with issue
+  const sDraft1 = await queryOne<{ id: string }>(
+    `INSERT INTO contents (organization_id, created_by, title, channel, status, latest_score)
+     VALUES ($1, $2, 'How I Built a Full Stack SaaS in 30 Days', 'Blog', 'reviewed', 88) RETURNING id`,
+    [soloId, soloUser!.id]
+  );
+  const sDraft1Body = `Here is my complete 30-day breakdown of designing, coding, and deploying an indie SaaS app with cheap database hosting and clean code architecture.`;
+  const sDraft1Ver = await queryOne<{ id: string }>(
     `INSERT INTO content_versions (organization_id, content_id, version_no, body, created_by)
      VALUES ($1, $2, 1, $3, $4) RETURNING id`,
-    [acmeId, draft1!.id, draft1Body, acmeCreator!.id]
+    [soloId, sDraft1!.id, sDraft1Body, soloUser!.id]
   );
-
-  await query(`UPDATE contents SET current_version_id = $1 WHERE id = $2`, [draft1Ver1!.id, draft1!.id]);
-
-  // Run review on Draft 1 so it's ready with full issue highlights!
-  const review1 = await queryOne<{ id: string }>(
-    `INSERT INTO reviews (organization_id, content_version_id, status)
-     VALUES ($1, $2, 'queued') RETURNING id`,
-    [acmeId, draft1Ver1!.id]
+  await query(`UPDATE contents SET current_version_id = $1 WHERE id = $2`, [sDraft1Ver!.id, sDraft1!.id]);
+  const sReview1 = await queryOne<{ id: string }>(
+    `INSERT INTO reviews (organization_id, content_version_id, status, score, finished_at)
+     VALUES ($1, $2, 'done', 88, CURRENT_TIMESTAMP) RETURNING id`,
+    [soloId, sDraft1Ver!.id]
   );
-  await runReviewPipeline(review1!.id, draft1Ver1!.id, acmeId);
-
-  // Draft 2: Submitted to Reviewer Queue in Acme
-  const draft2 = await queryOne<{ id: string }>(
-    `INSERT INTO contents (organization_id, created_by, title, channel, status, latest_score)
-     VALUES ($1, $2, 'SOC2 Security Certification Press Release', 'Press Release', 'submitted', 92) RETURNING id`,
-    [acmeId, acmeCreator!.id]
-  );
-
-  const draft2Ver1Body = `Acme is pleased to announce completion of our annual SOC2 Type II audit. Our enterprise platform continues to deliver 99.95% uptime SLA for Fortune 500 clients.`;
-  const draft2Ver1 = await queryOne<{ id: string }>(
-    `INSERT INTO content_versions (organization_id, content_id, version_no, body, created_by)
-     VALUES ($1, $2, 1, $3, $4) RETURNING id`,
-    [acmeId, draft2!.id, draft2Ver1Body, acmeCreator!.id]
-  );
-  await query(`UPDATE contents SET current_version_id = $1 WHERE id = $2`, [draft2Ver1!.id, draft2!.id]);
-
-  const review2 = await queryOne<{ id: string }>(
-    `INSERT INTO reviews (organization_id, content_version_id, status)
-     VALUES ($1, $2, 'queued') RETURNING id`,
-    [acmeId, draft2Ver1!.id]
-  );
-  await runReviewPipeline(review2!.id, draft2Ver1!.id, acmeId);
-
-  // Add anchored reviewer comment on Draft 2
   await query(
-    `INSERT INTO comments (organization_id, content_id, version_id, author_id, body, start_idx, end_idx)
-     VALUES ($1, $2, $3, $4, 'Great work! The citation of our SOC2 compliance and 99.95% SLA matches our verified specs perfectly.', 30, 80)`,
-    [acmeId, draft2!.id, draft2Ver1!.id, acmeReviewer!.id]
+    `INSERT INTO issues (organization_id, review_id, type, severity, quote, start_idx, end_idx, explanation, source_ref, suggestion, status)
+     VALUES ($1, $2, 'banned_term', 'high', 'cheap database hosting', 89, 110, 'Use professional phrasing like cost-effective or budget-friendly.', 'Solo Studio Guidelines', 'cost-effective cloud hosting', 'open')`,
+    [soloId, sReview1!.id]
   );
 
-  // Draft 3: Approved and Published content in Acme
-  const draft3 = await queryOne<{ id: string }>(
+  // Solo Draft 2: Submitted in Queue
+  const sDraft2 = await queryOne<{ id: string }>(
     `INSERT INTO contents (organization_id, created_by, title, channel, status, latest_score)
-     VALUES ($1, $2, 'Annual Engineering Uptime Report', 'Blog', 'published', 100) RETURNING id`,
-    [acmeId, acmeAdmin!.id]
+     VALUES ($1, $2, 'Open Source Developer Tools Digest #42', 'Email Newsletter', 'submitted', 95) RETURNING id`,
+    [soloId, soloUser!.id]
   );
-
-  const draft3Body = `In our annual reliability audit, Acme delivered 99.98% actual uptime across all geographic regions, outperforming our contractual 99.95% SLA commitment.`;
-  const draft3Ver = await queryOne<{ id: string }>(
+  const sDraft2Body = `In this week's issue, we review five lightweight command line tools that simplify database migrations and API testing.`;
+  const sDraft2Ver = await queryOne<{ id: string }>(
     `INSERT INTO content_versions (organization_id, content_id, version_no, body, created_by)
      VALUES ($1, $2, 1, $3, $4) RETURNING id`,
-    [acmeId, draft3!.id, draft3Body, acmeAdmin!.id]
+    [soloId, sDraft2!.id, sDraft2Body, soloUser!.id]
   );
-  await query(`UPDATE contents SET current_version_id = $1 WHERE id = $2`, [draft3Ver!.id, draft3!.id]);
+  await query(`UPDATE contents SET current_version_id = $1 WHERE id = $2`, [sDraft2Ver!.id, sDraft2!.id]);
+  await query(
+    `INSERT INTO reviews (organization_id, content_version_id, status, score, finished_at)
+     VALUES ($1, $2, 'done', 95, CURRENT_TIMESTAMP)`,
+    [soloId, sDraft2Ver!.id]
+  );
 
-  // Seed initial audit trail
-  await logAudit(acmeId, acmeAdmin!.id, 'system_seed', 'organization', acmeId, { description: 'Demo data loaded' });
-  await logAudit(acmeId, acmeCreator!.id, 'create_content', 'content', draft1!.id, { title: 'Q4 Enterprise Launch LinkedIn Announcement' });
-  await logAudit(acmeId, acmeCreator!.id, 'submit_content', 'content', draft2!.id, { title: 'SOC2 Security Certification Press Release' });
-  await logAudit(acmeId, acmeReviewer!.id, 'approve_content', 'content', draft3!.id, { title: 'Annual Engineering Uptime Report' });
+  // Solo Draft 3: Published
+  const sDraft3 = await queryOne<{ id: string }>(
+    `INSERT INTO contents (organization_id, created_by, title, channel, status, latest_score)
+     VALUES ($1, $2, 'Launching My New Web Architecture Guide', 'Twitter / X', 'published', 100) RETURNING id`,
+    [soloId, soloUser!.id]
+  );
+  const sDraft3Body = `Thrilled to release my complete full-stack web architecture guide! 10 chapters on building clean, high-performance web applications.`;
+  const sDraft3Ver = await queryOne<{ id: string }>(
+    `INSERT INTO content_versions (organization_id, content_id, version_no, body, created_by)
+     VALUES ($1, $2, 1, $3, $4) RETURNING id`,
+    [soloId, sDraft3!.id, sDraft3Body, soloUser!.id]
+  );
+  await query(`UPDATE contents SET current_version_id = $1 WHERE id = $2`, [sDraft3Ver!.id, sDraft3!.id]);
+
+  // Solo Audit Logs
+  await logAudit(soloId, soloUser!.id, 'system_seed', 'organization', soloId, { description: 'Solo Studio workspace created' });
+  await logAudit(soloId, soloUser!.id, 'create_content', 'content', sDraft1!.id, { title: 'How I Built a Full Stack SaaS in 30 Days' });
+  await logAudit(soloId, soloUser!.id, 'submit_content', 'content', sDraft2!.id, { title: 'Open Source Developer Tools Digest #42' });
+  await logAudit(soloId, soloUser!.id, 'publish_content', 'content', sDraft3!.id, { title: 'Launching My New Web Architecture Guide' });
 
   console.log('[Seed] Database successfully seeded with Acme, Zest, and Solo workspaces!');
-  console.log('================================================================');
-  console.log('Demo Credentials (all accounts use password: password123)');
-  console.log(' Acme Admin:    admin@acme.com');
-  console.log(' Acme Creator:  creator@acme.com');
-  console.log(' Acme Reviewer: reviewer@acme.com');
-  console.log(' Zest Admin:    admin@zest.io');
-  console.log(' Zest Creator:  creator@zest.io');
-  console.log(' Solo Creator:  solo@creator.dev');
-  console.log('================================================================');
 }
 
 if (require.main === module) {

@@ -12,24 +12,16 @@ import { CommentThread } from '../components/CommentThread';
 import { ContrastCheckerModal } from '../components/ContrastCheckerModal';
 import { MultiTenantDemo } from '../components/MultiTenantDemo';
 import { LoginScreen } from '../components/LoginScreen';
+import { LandingPage } from '../components/LandingPage';
 import {
   Sparkles,
   Plus,
   Send,
   CheckCircle,
-  XCircle,
-  RotateCcw,
-  ShieldAlert,
   FileText,
-  Clock,
-  ArrowRight,
-  Upload,
   Trash2,
   Lock,
   Search,
-  SlidersHorizontal,
-  ChevronRight,
-  TrendingUp,
   AlertTriangle,
   History,
   Check
@@ -37,6 +29,7 @@ import {
 
 export default function AppHome() {
   const { user, organization, loading: authLoading } = useAuth();
+  const [showLogin, setShowLogin] = useState(false);
 
   const [activeTab, setActiveTab] = useState<ActiveTab>('studio');
   const [contents, setContents] = useState<ContentItem[]>([]);
@@ -65,15 +58,11 @@ export default function AppHome() {
     note: ''
   });
 
-  // Governance state
+  // Brand Rules & Facts state
   const [guidelines, setGuidelines] = useState<any[]>([]);
   const [facts, setFacts] = useState<any[]>([]);
   const [bannedTerms, setBannedTerms] = useState<any[]>([]);
   const [newBannedTerm, setNewBannedTerm] = useState({ term: '', rep: '', reason: '', severity: 'high' });
-  const [newFactTitle, setNewFactTitle] = useState('');
-  const [newFactContent, setNewFactContent] = useState('');
-  const [newGuideTitle, setNewGuideTitle] = useState('');
-  const [newGuideContent, setNewGuideContent] = useState('');
 
   // Analytics state
   const [analyticsData, setAnalyticsData] = useState<any>(null);
@@ -84,12 +73,17 @@ export default function AppHome() {
   // Search and filter
   const [searchQuery, setSearchQuery] = useState('');
   const [channelFilter, setChannelFilter] = useState('ALL');
+  const [aiError, setAiError] = useState<string | null>(null);
 
   useEffect(() => {
     if (user && organization) {
+      setSelectedContentId(null);
+      setContentDetails(null);
+      setSelectedIssueId(null);
+      setAiError(null);
       loadInitialData();
     }
-  }, [user, organization]);
+  }, [user?.id, organization?.id]);
 
   async function loadInitialData() {
     setLoading(true);
@@ -103,9 +97,12 @@ export default function AppHome() {
       setContents(contentsRes.contents);
       setApprovalQueue(queueRes.queue);
 
-      // Default to selecting the first content if none selected
-      if (contentsRes.contents.length > 0 && !selectedContentId) {
-        loadContentDetails(contentsRes.contents[0].id);
+      if (contentsRes.contents.length > 0) {
+        const firstId = contentsRes.contents[0].id;
+        await loadContentDetails(firstId);
+      } else {
+        setSelectedContentId(null);
+        setContentDetails(null);
       }
     } catch (err) {
       console.error('Failed to load initial data:', err);
@@ -119,6 +116,11 @@ export default function AppHome() {
       const details = await api.getContent(id);
       setSelectedContentId(id);
       setContentDetails(details);
+      if (details.latestReview?.status === 'failed' || details.latestReview?.error_message) {
+        setAiError(details.latestReview.error_message || 'AI not responded');
+      } else {
+        setAiError(null);
+      }
       const currentVer = details.versions.find(v => v.id === details.content.current_version_id);
       setEditorBody(currentVer ? currentVer.body : '');
       if (details.issues.length > 0) {
@@ -133,6 +135,7 @@ export default function AppHome() {
   async function handleRunReview() {
     if (!selectedContentId || !contentDetails) return;
     setIsReviewing(true);
+    setAiError(null);
 
     try {
       // Save current editor body as a new version if modified
@@ -152,8 +155,11 @@ export default function AppHome() {
           if (res.review.status === 'done' || res.review.status === 'failed' || attempts > 20) {
             clearInterval(interval);
             setIsReviewing(false);
+            if (res.review.status === 'failed' || res.review.error_message) {
+              setAiError(res.review.error_message || 'AI not responded');
+            }
             // Refresh content details
-            loadContentDetails(selectedContentId);
+            await loadContentDetails(selectedContentId);
             // Refresh list
             const updated = await api.getContents();
             setContents(updated.contents);
@@ -161,11 +167,13 @@ export default function AppHome() {
         } catch {
           clearInterval(interval);
           setIsReviewing(false);
+          setAiError('AI not responded');
         }
       }, 600);
-    } catch (err) {
+    } catch (err: any) {
       console.error('Review failed:', err);
       setIsReviewing(false);
+      setAiError(err.message || 'AI not responded');
     }
   }
 
@@ -194,7 +202,7 @@ export default function AppHome() {
     }
   }
 
-  // Dismiss Issue
+  // Dismiss / Skip Issue
   async function handleDismissIssue(issueId: string, reason: string) {
     try {
       const res = await api.patchIssue(issueId, { status: 'dismissed', dismiss_reason: reason });
@@ -222,9 +230,9 @@ export default function AppHome() {
       await loadContentDetails(selectedContentId);
       const list = await api.getContents();
       setContents(list.contents);
-      alert('Content submitted for reviewer sign-off!');
+      alert('Draft sent for review!');
     } catch (err: any) {
-      alert(`Error submitting: ${err.message}`);
+      alert(`Could not send draft: ${err.message}`);
     }
   }
 
@@ -239,7 +247,7 @@ export default function AppHome() {
       setContents(list.contents);
       setApprovalQueue(queue.queue);
     } catch (err: any) {
-      alert(`Error recording decision: ${err.message}`);
+      alert(`Could not save feedback: ${err.message}`);
     }
   }
 
@@ -252,7 +260,7 @@ export default function AppHome() {
       const list = await api.getContents();
       setContents(list.contents);
     } catch (err: any) {
-      alert(`Error publishing: ${err.message}`);
+      alert(`Could not publish: ${err.message}`);
     }
   }
 
@@ -282,7 +290,7 @@ export default function AppHome() {
       await loadContentDetails(res.content.id);
       setActiveTab('studio');
     } catch (err: any) {
-      alert(`Failed to create draft: ${err.message}`);
+      alert(`Could not create draft: ${err.message}`);
     }
   }
 
@@ -310,6 +318,15 @@ export default function AppHome() {
     }
   }
 
+  const statusLabels: Record<string, string> = {
+    draft: 'Draft',
+    in_review: 'Checking...',
+    submitted: 'Waiting for Review',
+    approved: 'Approved',
+    changes_requested: 'Changes Needed',
+    published: 'Published'
+  };
+
   const filteredContents = contents.filter(c => {
     const matchesSearch = c.title.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesChannel = channelFilter === 'ALL' || c.channel === channelFilter;
@@ -317,28 +334,28 @@ export default function AppHome() {
   });
 
   const currentVersion = contentDetails?.versions.find(v => v.id === contentDetails.content.current_version_id);
-  const previousVersion = contentDetails?.versions.length && contentDetails.versions.length > 1
-    ? contentDetails.versions[contentDetails.versions.length - 2]
-    : null;
 
   if (authLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[#141210] text-stone-400">
-        <div className="flex items-center gap-3 text-sm font-medium">
-          <div className="w-5 h-5 border-2 border-amber-500 border-t-transparent rounded-full animate-spin" />
-          <span>Connecting to workspace...</span>
+      <div className="min-h-screen flex items-center justify-center bg-white">
+        <div className="flex items-center gap-3 text-sm font-medium text-gray-500">
+          <div className="w-5 h-5 border-2 border-gray-900 border-t-transparent rounded-full animate-spin" />
+          <span>Loading...</span>
         </div>
       </div>
     );
   }
 
   if (!user) {
-    return <LoginScreen />;
+    if (showLogin) {
+      return <LoginScreen onBack={() => setShowLogin(false)} />;
+    }
+    return <LandingPage onGetStarted={() => setShowLogin(true)} />;
   }
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#141210] text-stone-100 selection:bg-amber-500/30">
-      {/* Universal Header with Navigation & Profile Sign Out */}
+    <div className="app-dashboard min-h-screen flex flex-col bg-gray-50/50 text-gray-900 selection:bg-violet-200">
+      {/* Universal Header with Navigation & Profile */}
       <Header
         activeTab={activeTab}
         setActiveTab={handleTabChange}
@@ -349,30 +366,30 @@ export default function AppHome() {
       <main className="flex-1 max-w-7xl w-full mx-auto p-6">
         
         {/* ========================================================= */}
-        {/* TAB 1: DRAFTS & AI REVIEW STUDIO                          */}
+        {/* TAB 1: DRAFTS & SCANNER STUDIO                            */}
         {/* ========================================================= */}
         {activeTab === 'studio' && (
           <div className="space-y-6">
             {/* Top Action Bar */}
-            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 glass-panel p-4 rounded-2xl border border-stone-800">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 bg-white p-4 rounded-2xl border border-gray-200 shadow-sm">
               <div className="flex items-center gap-3">
                 <div className="relative">
-                  <Search className="w-4 h-4 text-stone-400 absolute left-3 top-2.5" />
+                  <Search className="w-4 h-4 text-gray-400 absolute left-3 top-3" />
                   <input
                     type="text"
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     placeholder="Search drafts by title..."
-                    className="pl-9 pr-4 py-1.5 rounded-xl bg-stone-900 border border-stone-700/60 text-xs text-white placeholder-stone-500 focus:outline-none focus:ring-1 focus:ring-amber-500"
+                    className="pl-9 pr-4 py-2 rounded-xl bg-white border border-gray-300 text-xs text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-violet-500 shadow-sm"
                   />
                 </div>
 
                 <select
                   value={channelFilter}
                   onChange={(e) => setChannelFilter(e.target.value)}
-                  className="px-3 py-1.5 rounded-xl bg-stone-900 border border-stone-700/60 text-xs text-stone-300 focus:outline-none"
+                  className="px-3 py-2 rounded-xl bg-white border border-gray-300 text-xs text-gray-700 focus:outline-none focus:ring-1 focus:ring-violet-500 shadow-sm"
                 >
-                  <option value="ALL">All Channels</option>
+                  <option value="ALL">All Places</option>
                   <option value="LinkedIn">LinkedIn</option>
                   <option value="Twitter / X">Twitter / X</option>
                   <option value="Blog">Blog</option>
@@ -383,10 +400,10 @@ export default function AppHome() {
 
               <button
                 onClick={() => setIsNewModalOpen(true)}
-                className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-amber-600 hover:bg-amber-500 text-white text-xs font-bold transition shadow-md shadow-amber-600/25"
+                className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-gray-900 hover:bg-gray-800 text-white text-xs font-bold transition shadow-sm"
               >
                 <Plus className="w-4 h-4" />
-                New Content Draft
+                New Draft
               </button>
             </div>
 
@@ -395,8 +412,8 @@ export default function AppHome() {
               
               {/* Drafts Sidebar */}
               <div className="lg:col-span-4 space-y-3">
-                <div className="flex items-center justify-between text-xs font-bold uppercase tracking-wider text-stone-400 px-1">
-                  <span>Organization Drafts ({filteredContents.length})</span>
+                <div className="flex items-center justify-between text-xs font-bold uppercase tracking-wider text-gray-500 px-1">
+                  <span>Your Drafts ({filteredContents.length})</span>
                 </div>
 
                 <div className="space-y-2.5 max-h-[calc(100vh-280px)] overflow-y-auto pr-1">
@@ -408,25 +425,25 @@ export default function AppHome() {
                         onClick={() => loadContentDetails(c.id)}
                         className={`p-4 rounded-2xl border transition-all cursor-pointer ${
                           isSelected
-                            ? 'bg-amber-950/25 border-amber-500/50 shadow-md shadow-amber-500/10'
-                            : 'glass-panel hover:bg-stone-850'
+                            ? 'bg-violet-50/50 border-violet-400 shadow-sm ring-1 ring-violet-400/20'
+                            : 'bg-white border-gray-200 hover:border-gray-300 hover:shadow-sm'
                         }`}
                       >
                         <div className="flex items-start justify-between gap-2 mb-1.5">
-                          <h4 className="font-bold text-sm text-white line-clamp-1">{c.title}</h4>
+                          <h4 className="font-bold text-sm text-gray-900 line-clamp-1">{c.title}</h4>
                           <ScoreBadge score={c.latest_score} size="sm" showLabel={false} />
                         </div>
 
-                        <div className="flex items-center justify-between text-xs text-stone-400">
+                        <div className="flex items-center justify-between text-xs text-gray-500">
                           <div className="flex items-center gap-2">
-                            <span className="px-2 py-0.5 rounded-md bg-stone-800 border border-stone-700/60 text-[10px] font-semibold text-stone-300">
+                            <span className="px-2 py-0.5 rounded-md bg-gray-100 border border-gray-200 text-[10px] font-semibold text-gray-600">
                               {c.channel}
                             </span>
-                            <span className="capitalize text-[11px] font-medium text-amber-300">
-                              {c.status.replace('_', ' ')}
+                            <span className="text-[11px] font-medium text-violet-700">
+                              {statusLabels[c.status] || c.status}
                             </span>
                           </div>
-                          <span className="text-[10px] text-stone-500">v{c.current_version_no || 1}</span>
+                          <span className="text-[10px] text-gray-400">v{c.current_version_no || 1}</span>
                         </div>
                       </div>
                     );
@@ -439,21 +456,21 @@ export default function AppHome() {
                 {contentDetails ? (
                   <div className="space-y-6">
                     {/* Header Panel */}
-                    <div className="glass-panel p-6 rounded-3xl border border-stone-800 space-y-4">
+                    <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm space-y-4">
                       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                         <div>
-                          <div className="flex items-center gap-2.5 text-xs text-stone-400 mb-1">
-                            <span className="px-2.5 py-0.5 rounded-full bg-amber-500/15 text-amber-300 border border-amber-500/30 text-[10px] font-bold">
+                          <div className="flex items-center gap-2 text-xs text-gray-500 mb-1">
+                            <span className="px-2.5 py-0.5 rounded-full bg-violet-50 text-violet-700 border border-violet-100 text-[10px] font-bold">
                               {contentDetails.content.channel}
                             </span>
                             <span>•</span>
-                            <span className="capitalize font-semibold text-stone-300">
-                              Status: {contentDetails.content.status.replace('_', ' ')}
+                            <span className="font-medium text-gray-700">
+                              Status: {statusLabels[contentDetails.content.status] || contentDetails.content.status}
                             </span>
                             <span>•</span>
                             <span>Version {currentVersion?.version_no || 1}</span>
                           </div>
-                          <h1 className="text-xl font-black text-white">{contentDetails.content.title}</h1>
+                          <h1 className="text-xl font-extrabold text-gray-900">{contentDetails.content.title}</h1>
                         </div>
 
                         {/* Top Score Badge */}
@@ -461,24 +478,31 @@ export default function AppHome() {
                       </div>
 
                       {/* Action Bar */}
-                      <div className="flex flex-wrap items-center justify-between gap-3 pt-3 border-t border-stone-800">
-                        <div className="flex items-center gap-2">
+                      <div className="flex flex-wrap items-center justify-between gap-3 pt-3 border-t border-gray-100">
+                        <div className="flex items-center gap-2.5">
                           <button
                             onClick={handleRunReview}
                             disabled={isReviewing}
-                            className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-amber-600 to-amber-500 hover:from-amber-500 hover:to-amber-400 text-white text-xs font-bold transition shadow-lg shadow-amber-600/25 disabled:opacity-50"
+                            className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-gray-900 hover:bg-gray-800 text-white text-xs font-bold transition shadow-sm disabled:opacity-50"
                           >
                             <Sparkles className={`w-4 h-4 ${isReviewing ? 'animate-spin' : ''}`} />
-                            {isReviewing ? 'Scanning Brand Rules...' : 'Run AI Review'}
+                            {isReviewing ? 'Checking words...' : 'Check My Words'}
                           </button>
+
+                          {(contentDetails.latestReview?.status === 'failed' || aiError) && (
+                            <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-amber-50 text-amber-800 border border-amber-200 text-xs font-semibold">
+                              <span className="w-2 h-2 rounded-full bg-amber-500 animate-pulse" />
+                              AI not responded
+                            </span>
+                          )}
 
                           {contentDetails.content.status !== 'published' && (
                             <button
                               onClick={handleSubmitForApproval}
-                              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold transition shadow-lg shadow-emerald-600/20"
+                              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-violet-600 hover:bg-violet-700 text-white text-xs font-bold transition shadow-sm"
                             >
                               <Send className="w-4 h-4" />
-                              Submit for Sign-off
+                              Send for Review
                             </button>
                           )}
                         </div>
@@ -490,15 +514,15 @@ export default function AppHome() {
                               <>
                                 <button
                                   onClick={() => setDecisionModal({ open: true, type: 'approved', note: '' })}
-                                  className="px-3.5 py-2 rounded-xl bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 text-xs font-bold hover:bg-emerald-500/30 transition"
+                                  className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition shadow-sm"
                                 >
                                   Approve
                                 </button>
                                 <button
                                   onClick={() => setDecisionModal({ open: true, type: 'changes_requested', note: '' })}
-                                  className="px-3.5 py-2 rounded-xl bg-amber-500/20 text-amber-300 border border-amber-500/40 text-xs font-bold hover:bg-amber-500/30 transition"
+                                  className="px-4 py-2 rounded-xl bg-white hover:bg-gray-50 border border-gray-300 text-gray-700 text-xs font-bold transition shadow-sm"
                                 >
-                                  Request Changes
+                                  Ask for Changes
                                 </button>
                               </>
                             )}
@@ -506,10 +530,10 @@ export default function AppHome() {
                             {contentDetails.content.status === 'approved' && user.role === 'admin' && (
                               <button
                                 onClick={handlePublish}
-                                className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-purple-600 hover:bg-purple-500 text-white text-xs font-bold transition"
+                                className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-gray-900 hover:bg-gray-800 text-white text-xs font-bold transition shadow-sm"
                               >
                                 <Lock className="w-3.5 h-3.5" />
-                                Mark as Published
+                                Publish Now
                               </button>
                             )}
                           </div>
@@ -517,15 +541,50 @@ export default function AppHome() {
                       </div>
                     </div>
 
+                    {/* AI Not Responded Alert Banner */}
+                    {(contentDetails.latestReview?.status === 'failed' || aiError) && (
+                      <div className="p-4 rounded-2xl bg-amber-50/90 border border-amber-200 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-sm">
+                        <div className="flex items-start gap-3">
+                          <div className="w-8 h-8 rounded-xl bg-amber-100 border border-amber-200 text-amber-800 flex items-center justify-center flex-shrink-0 text-sm font-bold mt-0.5 sm:mt-0">
+                            ⚠️
+                          </div>
+                          <div>
+                            <div className="flex items-center gap-2">
+                              <h4 className="text-sm font-bold text-amber-950">AI not responded</h4>
+                              <span className="px-2 py-0.5 rounded-full bg-amber-200/70 text-amber-900 text-[10px] font-bold uppercase tracking-wide">
+                                Rule checks only
+                              </span>
+                            </div>
+                            <p className="text-xs text-amber-800 mt-0.5 leading-relaxed">
+                              The AI review model did not respond or is not configured. Rule-based checks (words to avoid, readability grade) were completed and are shown below.
+                            </p>
+                            {aiError && (
+                              <div className="mt-1 text-[11px] font-mono text-amber-900/80 bg-amber-100/60 px-2 py-0.5 rounded">
+                                {aiError}
+                              </div>
+                            )}
+                          </div>
+                        </div>
+
+                        <button
+                          onClick={handleRunReview}
+                          disabled={isReviewing}
+                          className="px-3.5 py-1.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold transition shadow-sm whitespace-nowrap self-end sm:self-center"
+                        >
+                          Retry AI Check
+                        </button>
+                      </div>
+                    )}
+
                     {/* Split View: Left Highlighted Text / Right Issue Cards */}
                     <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 items-start">
                       
                       {/* Left Side: Draft Editor & Visual Highlighted Copy */}
                       <div className="space-y-4">
-                        <div className="flex items-center justify-between text-xs font-bold text-gray-400">
-                          <span>Audited Content Text (with Highlights):</span>
-                          <span className="text-[11px] text-gray-500 font-mono">
-                            {editorBody.length} chars • {editorBody.split(/\s+/).filter(Boolean).length} words
+                        <div className="flex items-center justify-between text-xs font-bold text-gray-600">
+                          <span>Draft Text (with highlighted items):</span>
+                          <span className="text-[11px] text-gray-400 font-mono">
+                            {editorBody.length} characters • {editorBody.split(/\s+/).filter(Boolean).length} words
                           </span>
                         </div>
 
@@ -540,20 +599,20 @@ export default function AppHome() {
                         {/* Editable Textarea for tweaking */}
                         {contentDetails.content.status !== 'published' && (
                           <div className="space-y-2 pt-2">
-                            <label className="block text-xs font-semibold text-gray-400">
-                              Direct Copy Editor (make custom edits, then re-run review):
+                            <label className="block text-xs font-semibold text-gray-600">
+                              Edit your text directly here, then click &ldquo;Check My Words&rdquo; to re-test:
                             </label>
                             <textarea
                               rows={5}
                               value={editorBody}
                               onChange={(e) => setEditorBody(e.target.value)}
-                              className="w-full p-4 rounded-2xl bg-stone-900/90 border border-stone-800 font-mono text-xs text-stone-200 focus:outline-none focus:ring-1 focus:ring-amber-500 leading-relaxed"
+                              className="w-full p-4 rounded-2xl bg-white border border-gray-300 font-mono text-xs text-gray-900 focus:outline-none focus:ring-1 focus:ring-violet-500 leading-relaxed shadow-sm"
                             />
                           </div>
                         )}
 
-                        {/* Anchored Comments Component */}
-                        <div className="glass-panel p-5 rounded-2xl border border-white/10">
+                        {/* Team Notes & Comments */}
+                        <div className="bg-white p-5 rounded-2xl border border-gray-200 shadow-sm">
                           <CommentThread
                             comments={contentDetails.comments}
                             currentVersionId={currentVersion?.id || ''}
@@ -564,19 +623,35 @@ export default function AppHome() {
 
                       {/* Right Side: Issue Cards and Intent-Preserving Fixes */}
                       <div className="space-y-4">
-                        <div className="flex items-center justify-between text-xs font-bold text-stone-400">
-                          <span>Brand Findings & Suggestions ({contentDetails.issues.filter(i => i.status === 'open').length} Open)</span>
-                          <span className="text-[11px] text-amber-400 font-medium">Accept Proposed Fix</span>
+                        <div className="flex items-center justify-between text-xs font-bold text-gray-600">
+                          <span>What to Fix ({contentDetails.issues.filter(i => i.status === 'open').length} open)</span>
+                          <span className="text-[11px] text-violet-600 font-medium">Click a fix to apply it directly</span>
                         </div>
 
+                        {/* AI Not Responded Card in Issue Column */}
+                        {(contentDetails.latestReview?.status === 'failed' || aiError) && (
+                          <div className="p-4 rounded-2xl bg-amber-50 border border-amber-200 text-amber-900 space-y-2 shadow-sm">
+                            <div className="flex items-center justify-between">
+                              <span className="px-2.5 py-0.5 rounded-full bg-amber-200 text-amber-900 text-[10px] font-bold">
+                                AI Status
+                              </span>
+                              <span className="text-[11px] font-medium text-amber-700">Tone & claims skipped</span>
+                            </div>
+                            <h4 className="font-bold text-xs text-amber-950">AI not responded</h4>
+                            <p className="text-xs text-amber-800 leading-relaxed">
+                              The AI review service did not return a response. Rule-based checks (words to avoid, readability grade) are displayed below.
+                            </p>
+                          </div>
+                        )}
+
                         {contentDetails.issues.length === 0 ? (
-                          <div className="p-8 rounded-3xl glass-panel text-center space-y-3">
-                            <div className="w-12 h-12 rounded-2xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center mx-auto">
+                          <div className="p-8 rounded-2xl bg-white border border-gray-200 text-center space-y-3 shadow-sm">
+                            <div className="w-12 h-12 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center mx-auto">
                               <CheckCircle className="w-6 h-6" />
                             </div>
-                            <h3 className="font-bold text-white text-base">Zero Brand Violations Found</h3>
-                            <p className="text-xs text-gray-400 max-w-sm mx-auto">
-                              This copy conforms with all brand tone guidelines, approved technical facts, and accessibility requirements.
+                            <h3 className="font-bold text-gray-900 text-base">All clear! No issues found</h3>
+                            <p className="text-xs text-gray-500 max-w-sm mx-auto">
+                              This draft follows all brand voice rules, approved facts, and readability guidelines.
                             </p>
                           </div>
                         ) : (
@@ -598,8 +673,8 @@ export default function AppHome() {
                     </div>
                   </div>
                 ) : (
-                  <div className="glass-panel p-12 rounded-3xl text-center text-gray-400">
-                    Select a content draft from the left or create a new one to start auditing.
+                  <div className="bg-white p-12 rounded-2xl border border-gray-200 text-center text-gray-500 shadow-sm">
+                    Select a draft from the left or create a new one to start checking.
                   </div>
                 )}
               </div>
@@ -609,42 +684,42 @@ export default function AppHome() {
         )}
 
         {/* ========================================================= */}
-        {/* TAB 2: APPROVAL QUEUE & VERSION DIFF                      */}
+        {/* TAB 2: REVIEW QUEUE & VERSION DIFF                        */}
         {/* ========================================================= */}
         {activeTab === 'approvals' && (
           <div className="space-y-6 max-w-5xl mx-auto">
             <div className="flex items-center justify-between">
               <div>
-                <h2 className="text-xl font-black text-white">Reviewer Approval Queue</h2>
-                <p className="text-xs text-gray-400">
-                  Pre-publication governance sign-off for marketing copy, announcements, and claims.
+                <h2 className="text-xl font-black text-gray-900">Drafts Waiting for Review</h2>
+                <p className="text-xs text-gray-500">
+                  Review submitted drafts from your team and give feedback or sign off before publishing.
                 </p>
               </div>
-              <span className="px-3 py-1 rounded-full bg-amber-500/15 text-amber-300 text-xs font-bold border border-amber-500/30">
-                {approvalQueue.length} Items Pending Review
+              <span className="px-3 py-1 rounded-full bg-violet-50 text-violet-700 text-xs font-bold border border-violet-100">
+                {approvalQueue.length} Drafts waiting
               </span>
             </div>
 
             {approvalQueue.length === 0 ? (
-              <div className="glass-panel p-12 rounded-3xl text-center space-y-3">
-                <CheckCircle className="w-10 h-10 text-emerald-400 mx-auto" />
-                <h3 className="text-base font-bold text-white">Queue is Clear!</h3>
-                <p className="text-xs text-gray-400">All submitted drafts have been reviewed and approved.</p>
+              <div className="bg-white p-12 rounded-2xl border border-gray-200 text-center space-y-3 shadow-sm">
+                <CheckCircle className="w-10 h-10 text-emerald-600 mx-auto" />
+                <h3 className="text-base font-bold text-gray-900">All caught up!</h3>
+                <p className="text-xs text-gray-500">All submitted drafts have been reviewed and approved.</p>
               </div>
             ) : (
               <div className="space-y-4">
                 {approvalQueue.map((item) => (
-                  <div key={item.id} className="p-6 rounded-3xl glass-panel border border-white/10 space-y-5">
+                  <div key={item.id} className="p-6 rounded-2xl bg-white border border-gray-200 shadow-sm space-y-5">
                     <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
                       <div>
-                        <div className="flex items-center gap-2 text-xs text-gray-400 mb-1">
-                          <span className="font-semibold text-gray-300">{item.author_name}</span>
+                        <div className="flex items-center gap-2 text-xs text-gray-500 mb-1">
+                          <span className="font-semibold text-gray-800">{item.author_name}</span>
                           <span>•</span>
                           <span>{item.channel}</span>
                           <span>•</span>
                           <span>Submitted {new Date(item.created_at).toLocaleDateString()}</span>
                         </div>
-                        <h3 className="text-lg font-bold text-white">{item.title}</h3>
+                        <h3 className="text-lg font-bold text-gray-900">{item.title}</h3>
                       </div>
 
                       <ScoreBadge score={item.latest_score} />
@@ -652,8 +727,8 @@ export default function AppHome() {
 
                     {/* Diff against previous version */}
                     <div className="space-y-2">
-                      <div className="text-xs font-semibold text-gray-300 uppercase tracking-wider">
-                        Revision Inspection & Diff Viewer:
+                      <div className="text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                        See What Changed:
                       </div>
                       <DiffView
                         oldText="Our app is the #1 fastest tool, guaranteed! Trusted by millions of businesses."
@@ -662,24 +737,24 @@ export default function AppHome() {
                     </div>
 
                     {/* Actions */}
-                    <div className="flex items-center justify-end gap-3 pt-3 border-t border-white/10">
+                    <div className="flex items-center justify-end gap-3 pt-3 border-t border-gray-100">
                       <button
                         onClick={() => {
                           setSelectedContentId(item.id);
                           setDecisionModal({ open: true, type: 'changes_requested', note: '' });
                         }}
-                        className="px-4 py-2 rounded-xl bg-amber-500/20 text-amber-300 border border-amber-500/40 text-xs font-bold hover:bg-amber-500/30 transition"
+                        className="px-4 py-2 rounded-xl bg-white hover:bg-gray-50 border border-gray-300 text-gray-700 text-xs font-bold transition shadow-sm"
                       >
-                        Request Changes
+                        Ask for Changes
                       </button>
                       <button
                         onClick={() => {
                           setSelectedContentId(item.id);
                           setDecisionModal({ open: true, type: 'approved', note: '' });
                         }}
-                        className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold transition shadow-md shadow-emerald-600/20"
+                        className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition shadow-sm"
                       >
-                        Approve Publication
+                        Approve Draft
                       </button>
                     </div>
                   </div>
@@ -690,43 +765,41 @@ export default function AppHome() {
         )}
 
         {/* ========================================================= */}
-        {/* TAB 3: BRAND GUIDELINES & APPROVED FACTS                   */}
+        {/* TAB 3: BRAND RULES & APPROVED FACTS                       */}
         {/* ========================================================= */}
         {activeTab === 'governance' && (
           <div className="space-y-8 max-w-6xl mx-auto">
-            {/* 1. Banned Terms Manager */}
-            <div className="p-6 rounded-3xl glass-panel border border-white/10 space-y-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h3 className="text-base font-bold text-white">Banned Vocabulary & Outdated Terms</h3>
-                  <p className="text-xs text-gray-400">
-                    Prohibited terms are matched instantaneously without relying solely on LLMs.
-                  </p>
-                </div>
+            {/* 1. Words to Avoid Manager */}
+            <div className="p-6 rounded-2xl bg-white border border-gray-200 shadow-sm space-y-4">
+              <div>
+                <h3 className="text-base font-bold text-gray-900">Words to Avoid</h3>
+                <p className="text-xs text-gray-500">
+                  Words or phrases that should never appear in your marketing copy.
+                </p>
               </div>
 
               {/* Add Term Form */}
-              <div className="grid grid-cols-1 md:grid-cols-5 gap-3 p-4 rounded-2xl bg-black/40 border border-white/5">
+              <div className="grid grid-cols-1 md:grid-cols-5 gap-3 p-4 rounded-xl bg-gray-50 border border-gray-200">
                 <input
                   type="text"
-                  placeholder="Prohibited term (e.g. cheap)"
+                  placeholder="Word to avoid (e.g. cheap)"
                   value={newBannedTerm.term}
                   onChange={(e) => setNewBannedTerm({ ...newBannedTerm, term: e.target.value })}
-                  className="px-3 py-2 rounded-xl bg-slate-900 border border-white/10 text-xs text-white"
+                  className="px-3 py-2 rounded-xl bg-white border border-gray-300 text-xs text-gray-900 shadow-sm"
                 />
                 <input
                   type="text"
-                  placeholder="Preferred replacement"
+                  placeholder="Better word to use"
                   value={newBannedTerm.rep}
                   onChange={(e) => setNewBannedTerm({ ...newBannedTerm, rep: e.target.value })}
-                  className="px-3 py-2 rounded-xl bg-slate-900 border border-white/10 text-xs text-white"
+                  className="px-3 py-2 rounded-xl bg-white border border-gray-300 text-xs text-gray-900 shadow-sm"
                 />
                 <input
                   type="text"
-                  placeholder="Policy reason"
+                  placeholder="Why (e.g. sounds low quality)"
                   value={newBannedTerm.reason}
                   onChange={(e) => setNewBannedTerm({ ...newBannedTerm, reason: e.target.value })}
-                  className="px-3 py-2 rounded-xl bg-slate-900 border border-white/10 text-xs text-white md:col-span-2"
+                  className="px-3 py-2 rounded-xl bg-white border border-gray-300 text-xs text-gray-900 shadow-sm md:col-span-2"
                 />
                 <button
                   onClick={async () => {
@@ -736,141 +809,94 @@ export default function AppHome() {
                     const res = await api.getBannedTerms();
                     setBannedTerms(res.bannedTerms);
                   }}
-                  className="px-4 py-2 rounded-xl bg-amber-600 hover:bg-amber-500 text-white text-xs font-bold transition shadow-sm shadow-amber-600/20"
+                  className="px-4 py-2 rounded-xl bg-gray-900 hover:bg-gray-800 text-white text-xs font-bold transition shadow-sm"
                 >
-                  Add Term
+                  Add to Avoid List
                 </button>
               </div>
 
               {/* List */}
-              <div className="divide-y divide-white/5">
-                {bannedTerms.map((b) => (
-                  <div key={b.id} className="py-3 flex items-center justify-between text-xs">
-                    <div>
-                      <span className="font-mono font-bold text-rose-400">&ldquo;{b.term}&rdquo;</span>
-                      <span className="text-gray-400 mx-2">→</span>
-                      <span className="font-semibold text-emerald-400">&ldquo;{b.preferred_replacement}&rdquo;</span>
-                      <span className="text-gray-500 ml-3">({b.reason})</span>
-                    </div>
-                    <button
-                      onClick={async () => {
-                        await api.deleteBannedTerm(b.id);
-                        const res = await api.getBannedTerms();
-                        setBannedTerms(res.bannedTerms);
-                      }}
-                      className="text-gray-500 hover:text-rose-400"
-                    >
-                      <Trash2 className="w-3.5 h-3.5" />
-                    </button>
+              <div className="divide-y divide-gray-100">
+                {bannedTerms.length === 0 ? (
+                  <div className="py-6 text-center text-xs text-gray-500">
+                    No words to avoid added yet. Add your first restricted word above.
                   </div>
-                ))}
+                ) : (
+                  bannedTerms.map((b) => (
+                    <div key={b.id} className="py-3 flex items-center justify-between text-xs">
+                      <div>
+                        <span className="font-mono font-bold text-red-600">&ldquo;{b.term}&rdquo;</span>
+                        <span className="text-gray-400 mx-2">→</span>
+                        <span className="font-semibold text-emerald-700">&ldquo;{b.preferred_replacement}&rdquo;</span>
+                        <span className="text-gray-500 ml-3">({b.reason})</span>
+                      </div>
+                      <button
+                        onClick={async () => {
+                          await api.deleteBannedTerm(b.id);
+                          const res = await api.getBannedTerms();
+                          setBannedTerms(res.bannedTerms);
+                        }}
+                        className="text-gray-400 hover:text-red-600 transition"
+                        title="Remove from list"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
+                  ))
+                )}
               </div>
             </div>
 
-            {/* 2. Guidelines & Facts Ingestion */}
+            {/* 2. Guidelines & Facts */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {/* Guidelines */}
-              <div className="p-6 rounded-3xl glass-panel border border-white/10 space-y-4">
-                <h3 className="text-base font-bold text-white">Brand Voice Guidelines</h3>
+              <div className="p-6 rounded-2xl bg-white border border-gray-200 shadow-sm space-y-4">
+                <div>
+                  <h3 className="text-base font-bold text-gray-900">Brand Voice Guidelines</h3>
+                  <p className="text-xs text-gray-500">
+                    Style guides the AI uses to keep all drafts on-brand.
+                  </p>
+                </div>
                 <div className="space-y-3">
-                  {guidelines.map((g) => (
-                    <div key={g.id} className="p-3.5 rounded-xl bg-black/40 border border-white/5 space-y-1">
-                      <div className="flex items-center justify-between text-xs">
-                        <span className="font-bold text-white">{g.title}</span>
-                        <span className="text-amber-400">{g.chunk_count} Vector Chunks</span>
-                      </div>
-                      <div className="text-[11px] text-gray-400">Kind: {g.kind} • Embedded in pgvector</div>
+                  {guidelines.length === 0 ? (
+                    <div className="p-6 rounded-xl bg-gray-50 text-center text-xs text-gray-500">
+                      No brand guidelines loaded yet.
                     </div>
-                  ))}
+                  ) : (
+                    guidelines.map((g) => (
+                      <div key={g.id} className="p-3.5 rounded-xl bg-gray-50 border border-gray-200 space-y-1">
+                        <div className="flex items-center justify-between text-xs">
+                          <span className="font-bold text-gray-900">{g.title}</span>
+                          <span className="text-violet-700 font-semibold">{g.chunk_count} rules loaded</span>
+                        </div>
+                        <div className="text-[11px] text-gray-500">Category: {g.kind}</div>
+                      </div>
+                    ))
+                  )}
                 </div>
               </div>
 
               {/* Facts */}
-              <div className="p-6 rounded-3xl glass-panel border border-white/10 space-y-4">
-                <h3 className="text-base font-bold text-white">Approved Fact Documents</h3>
+              <div className="p-6 rounded-2xl bg-white border border-gray-200 shadow-sm space-y-4">
+                <div>
+                  <h3 className="text-base font-bold text-gray-900">Approved Facts & Numbers</h3>
+                  <p className="text-xs text-gray-500">
+                    Verified technical numbers and stats to prevent false or unproven claims.
+                  </p>
+                </div>
                 <div className="space-y-3">
-                  {facts.map((f) => (
-                    <div key={f.id} className="p-3.5 rounded-xl bg-black/40 border border-white/5 space-y-1">
-                      <div className="flex items-center justify-between text-xs">
-                        <span className="font-bold text-white">{f.title}</span>
-                        <span className="text-emerald-400">{f.chunk_count} Vector Chunks</span>
-                      </div>
-                      <div className="text-[11px] text-gray-400">Effective Date: {f.effective_date}</div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* ========================================================= */}
-        {/* TAB 4: GOVERNANCE ANALYTICS & INSIGHTS                    */}
-        {/* ========================================================= */}
-        {activeTab === 'analytics' && analyticsData && (
-          <div className="space-y-8 max-w-6xl mx-auto">
-            {/* Metric Cards */}
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-              <div className="p-5 rounded-2xl glass-panel border border-white/10">
-                <div className="text-xs text-gray-400 font-semibold mb-1">Total Drafts Audited</div>
-                <div className="text-2xl font-black text-white">{analyticsData.stats.total_drafts || 0}</div>
-              </div>
-              <div className="p-5 rounded-2xl glass-panel border border-white/10">
-                <div className="text-xs text-gray-400 font-semibold mb-1">Approved & Published</div>
-                <div className="text-2xl font-black text-emerald-400">{analyticsData.stats.approved_count || 0}</div>
-              </div>
-              <div className="p-5 rounded-2xl glass-panel border border-white/10">
-                <div className="text-xs text-gray-400 font-semibold mb-1">Org Average Score</div>
-                <div className="text-2xl font-black text-amber-400">{analyticsData.stats.org_avg_score || 0}%</div>
-              </div>
-              <div className="p-5 rounded-2xl glass-panel border border-white/10">
-                <div className="text-xs text-gray-400 font-semibold mb-1">Active Violations</div>
-                <div className="text-2xl font-black text-rose-400">{analyticsData.stats.open_issues_count || 0}</div>
-              </div>
-            </div>
-
-            {/* Top Violations & Ambiguous Rules */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              {/* Top Violations */}
-              <div className="p-6 rounded-3xl glass-panel border border-white/10 space-y-4">
-                <h3 className="text-base font-bold text-white">Most Frequent Violations</h3>
-                <div className="space-y-2.5">
-                  {analyticsData.topViolations?.map((v: any, idx: number) => (
-                    <div key={idx} className="p-3 rounded-xl bg-black/40 border border-white/5 flex items-center justify-between text-xs">
-                      <div>
-                        <span className="font-mono font-bold text-rose-300">&ldquo;{v.quote}&rdquo;</span>
-                        <div className="text-[10px] text-gray-400 mt-0.5">{v.source_ref}</div>
-                      </div>
-                      <span className="px-2.5 py-1 rounded-full bg-rose-500/20 text-rose-300 font-bold">
-                        {v.count} times
-                      </span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              {/* Ambiguous Rules Alert */}
-              <div className="p-6 rounded-3xl glass-panel border border-white/10 space-y-4">
-                <div className="flex items-center gap-2">
-                  <AlertTriangle className="w-5 h-5 text-amber-400" />
-                  <h3 className="text-base font-bold text-white">Ambiguous Brand Rules Detector</h3>
-                </div>
-                <p className="text-xs text-gray-400">
-                  Rules that have been violated by 2 or more distinct team members, indicating the guideline wording needs clarification.
-                </p>
-
-                <div className="space-y-3">
-                  {analyticsData.ambiguousRules?.length === 0 ? (
-                    <div className="p-4 rounded-xl bg-black/20 text-xs text-gray-500 text-center">
-                      No ambiguity flags detected yet.
+                  {facts.length === 0 ? (
+                    <div className="p-6 rounded-xl bg-gray-50 text-center text-xs text-gray-500">
+                      No approved facts loaded yet.
                     </div>
                   ) : (
-                    analyticsData.ambiguousRules?.map((r: any, idx: number) => (
-                      <div key={idx} className="p-4 rounded-xl bg-amber-500/10 border border-amber-500/20 space-y-1">
-                        <div className="text-xs font-bold text-amber-300">{r.source_ref}</div>
-                        <div className="text-[11px] text-gray-300">
-                          Violated by {r.distinct_violators} different team members across {r.total_occurrences} drafts.
+                    facts.map((f) => (
+                      <div key={f.id} className="p-3.5 rounded-xl bg-gray-50 border border-gray-200 space-y-1">
+                        <div className="flex items-center justify-between text-xs">
+                          <span className="font-bold text-gray-900">{f.title}</span>
+                          <span className="text-emerald-700 font-semibold">{f.chunk_count} facts verified</span>
                         </div>
+                        <div className="text-[11px] text-gray-500">Last updated: {f.effective_date}</div>
                       </div>
                     ))
                   )}
@@ -881,49 +907,152 @@ export default function AppHome() {
         )}
 
         {/* ========================================================= */}
-        {/* TAB 5: AUDIT TRAIL                                        */}
+        {/* TAB 4: SCORE & REPORTS                                    */}
+        {/* ========================================================= */}
+        {activeTab === 'analytics' && (
+          !analyticsData ? (
+            <div className="bg-white p-12 rounded-2xl border border-gray-200 text-center shadow-sm max-w-xl mx-auto space-y-3">
+              <div className="w-8 h-8 border-2 border-violet-600 border-t-transparent rounded-full animate-spin mx-auto" />
+              <h3 className="font-bold text-gray-900 text-base">Loading Reports...</h3>
+              <p className="text-xs text-gray-500">Compiling brand health scores, mistake counts, and rule patterns.</p>
+            </div>
+          ) : (
+            <div className="space-y-8 max-w-6xl mx-auto">
+              {/* Metric Cards */}
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                <div className="p-5 rounded-2xl bg-white border border-gray-200 shadow-sm">
+                  <div className="text-xs text-gray-500 font-semibold mb-1">Drafts Checked</div>
+                  <div className="text-2xl font-black text-gray-900">{analyticsData.stats.total_drafts || 0}</div>
+                </div>
+                <div className="p-5 rounded-2xl bg-white border border-gray-200 shadow-sm">
+                  <div className="text-xs text-gray-500 font-semibold mb-1">Approved & Live</div>
+                  <div className="text-2xl font-black text-emerald-600">{analyticsData.stats.approved_count || 0}</div>
+                </div>
+                <div className="p-5 rounded-2xl bg-white border border-gray-200 shadow-sm">
+                  <div className="text-xs text-gray-500 font-semibold mb-1">Team Average Score</div>
+                  <div className="text-2xl font-black text-violet-600">{analyticsData.stats.org_avg_score || 0}%</div>
+                </div>
+                <div className="p-5 rounded-2xl bg-white border border-gray-200 shadow-sm">
+                  <div className="text-xs text-gray-500 font-semibold mb-1">Issues Needing Fix</div>
+                  <div className="text-2xl font-black text-amber-600">{analyticsData.stats.open_issues_count || 0}</div>
+                </div>
+              </div>
+
+              {/* Top Violations & Ambiguous Rules */}
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                {/* Top Violations */}
+                <div className="p-6 rounded-2xl bg-white border border-gray-200 shadow-sm space-y-4">
+                  <div>
+                    <h3 className="text-base font-bold text-gray-900">Most Common Mistakes</h3>
+                    <p className="text-xs text-gray-500">
+                      Phrases that get flagged most often across all drafts.
+                    </p>
+                  </div>
+                  <div className="space-y-2.5">
+                    {(!analyticsData.topViolations || analyticsData.topViolations.length === 0) ? (
+                      <div className="p-6 rounded-xl bg-gray-50 text-center text-xs text-gray-500">
+                        No flagged mistakes recorded yet.
+                      </div>
+                    ) : (
+                      analyticsData.topViolations.map((v: any, idx: number) => (
+                        <div key={idx} className="p-3 rounded-xl bg-gray-50 border border-gray-200 flex items-center justify-between text-xs">
+                          <div>
+                            <span className="font-mono font-bold text-red-700">&ldquo;{v.quote}&rdquo;</span>
+                            <div className="text-[10px] text-gray-500 mt-0.5">{v.source_ref}</div>
+                          </div>
+                          <span className="px-2.5 py-1 rounded-full bg-red-50 text-red-700 border border-red-200 font-bold">
+                            {v.count} times
+                          </span>
+                        </div>
+                      ))
+                    )}
+                  </div>
+                </div>
+
+                {/* Ambiguous Rules Alert */}
+                <div className="p-6 rounded-2xl bg-white border border-gray-200 shadow-sm space-y-4">
+                  <div className="flex items-center gap-2">
+                    <AlertTriangle className="w-5 h-5 text-amber-500" />
+                    <h3 className="text-base font-bold text-gray-900">Confusing Rules Helper</h3>
+                  </div>
+                  <p className="text-xs text-gray-500">
+                    Rules broken by multiple different team members. Clarifying these rules can prevent repeated mistakes.
+                  </p>
+
+                  <div className="space-y-3">
+                    {(!analyticsData.ambiguousRules || analyticsData.ambiguousRules.length === 0) ? (
+                      <div className="p-6 rounded-xl bg-gray-50 text-xs text-gray-500 text-center">
+                        All rules seem clear! No confusing rule flags found.
+                      </div>
+                    ) : (
+                      analyticsData.ambiguousRules.map((r: any, idx: number) => (
+                        <div key={idx} className="p-4 rounded-xl bg-amber-50/70 border border-amber-200 space-y-1">
+                          <div className="text-xs font-bold text-amber-900">{r.source_ref}</div>
+                          <div className="text-[11px] text-amber-800">
+                            Broken by {r.distinct_violators} different team members across {r.total_occurrences} drafts.
+                          </div>
+                        </div>
+                      ))
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+          )
+        )}
+
+        {/* ========================================================= */}
+        {/* TAB 5: ACTIVITY HISTORY (AUDIT TRAIL)                     */}
         {/* ========================================================= */}
         {activeTab === 'audit' && (
           <div className="space-y-6 max-w-5xl mx-auto">
             <div>
-              <h2 className="text-xl font-black text-white">Immutable Governance Audit Trail</h2>
-              <p className="text-xs text-gray-400">
-                Cryptographic timeline of every upload, scan, issue dismissal, sign-off, and publication.
+              <h2 className="text-xl font-black text-gray-900">Activity History</h2>
+              <p className="text-xs text-gray-500">
+                A clear record of every check, edit, approval, and publication.
               </p>
             </div>
 
-            <div className="glass-panel rounded-3xl border border-white/10 divide-y divide-white/5">
-              {auditLogs.map((log) => (
-                <div key={log.id} className="p-4 flex items-center justify-between text-xs">
-                  <div className="flex items-center gap-3">
-                    <History className="w-4 h-4 text-amber-400 flex-shrink-0" />
-                    <div>
-                      <div className="font-bold text-white">
-                        <span className="text-amber-300">{log.actor_name}</span> performed{' '}
-                        <span className="font-mono text-emerald-300">{log.action}</span> on{' '}
-                        <span className="text-stone-300">{log.entity_type}</span>
-                      </div>
-                      <div className="text-[10px] text-gray-500 font-mono">
-                        {JSON.stringify(log.metadata)}
+            {auditLogs.length === 0 ? (
+              <div className="bg-white p-12 rounded-2xl border border-gray-200 text-center shadow-sm max-w-xl mx-auto space-y-3">
+                <History className="w-8 h-8 text-gray-400 mx-auto" />
+                <h3 className="font-bold text-gray-900 text-base">No activity recorded yet</h3>
+                <p className="text-xs text-gray-500">Actions such as draft edits, approvals, and reviews will appear here.</p>
+              </div>
+            ) : (
+              <div className="bg-white rounded-2xl border border-gray-200 shadow-sm divide-y divide-gray-100">
+                {auditLogs.map((log) => (
+                  <div key={log.id} className="p-4 flex items-center justify-between text-xs">
+                    <div className="flex items-center gap-3">
+                      <History className="w-4 h-4 text-violet-600 flex-shrink-0" />
+                      <div>
+                        <div className="font-bold text-gray-900">
+                          <span className="text-violet-700">{log.actor_name}</span> performed{' '}
+                          <span className="font-semibold text-emerald-700">{log.action}</span> on{' '}
+                          <span className="text-gray-700">{log.entity_type}</span>
+                        </div>
+                        <div className="text-[10px] text-gray-400 font-mono mt-0.5">
+                          {JSON.stringify(log.metadata)}
+                        </div>
                       </div>
                     </div>
+                    <span className="text-gray-400 text-[11px] whitespace-nowrap ml-4">
+                      {new Date(log.created_at).toLocaleString()}
+                    </span>
                   </div>
-                  <span className="text-gray-500 text-[11px] whitespace-nowrap ml-4">
-                    {new Date(log.created_at).toLocaleString()}
-                  </span>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            )}
           </div>
         )}
 
         {/* ========================================================= */}
-        {/* TAB 6: ACCESSIBILITY TOOLS                                */}
+        {/* TAB 6: ACCESSIBILITY & READABILITY                        */}
         {/* ========================================================= */}
         {activeTab === 'a11y' && <ContrastCheckerModal />}
 
         {/* ========================================================= */}
-        {/* TAB 7: MULTI-TENANCY COMPARISON DEMO                      */}
+        {/* TAB 7: COMPARE TWO BRANDS                                 */}
         {/* ========================================================= */}
         {activeTab === 'multitenant' && <MultiTenantDemo />}
 
@@ -933,29 +1062,29 @@ export default function AppHome() {
       {/* MODAL: CREATE NEW DRAFT                                   */}
       {/* ========================================================= */}
       {isNewModalOpen && (
-        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-          <div className="glass-panel p-6 rounded-3xl border border-white/10 max-w-lg w-full space-y-4">
-            <h3 className="text-lg font-bold text-white">Create New Content Draft</h3>
+        <div className="fixed inset-0 bg-gray-900/40 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+          <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-xl max-w-lg w-full space-y-4">
+            <h3 className="text-lg font-bold text-gray-900">Start a New Draft</h3>
             
             <form onSubmit={handleCreateNewContent} className="space-y-4">
               <div>
-                <label className="block text-xs font-semibold text-gray-300 mb-1">Title</label>
+                <label className="block text-xs font-semibold text-gray-700 mb-1">Draft Title</label>
                 <input
                   type="text"
                   required
-                  placeholder="e.g. Q4 Product Launch Social Post"
+                  placeholder="e.g. Q4 Launch Announcement"
                   value={newTitle}
                   onChange={(e) => setNewTitle(e.target.value)}
-                  className="w-full px-3.5 py-2 rounded-xl bg-slate-900 border border-white/10 text-xs text-white"
+                  className="w-full px-3.5 py-2 rounded-xl bg-white border border-gray-300 text-xs text-gray-900 shadow-sm focus:outline-none focus:ring-1 focus:ring-violet-500"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-gray-300 mb-1">Target Channel</label>
+                <label className="block text-xs font-semibold text-gray-700 mb-1">Where will this be published?</label>
                 <select
                   value={newChannel}
                   onChange={(e) => setNewChannel(e.target.value)}
-                  className="w-full px-3.5 py-2 rounded-xl bg-slate-900 border border-white/10 text-xs text-white"
+                  className="w-full px-3.5 py-2 rounded-xl bg-white border border-gray-300 text-xs text-gray-900 shadow-sm focus:outline-none focus:ring-1 focus:ring-violet-500"
                 >
                   <option value="LinkedIn">LinkedIn</option>
                   <option value="Twitter / X">Twitter / X</option>
@@ -966,13 +1095,13 @@ export default function AppHome() {
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-gray-300 mb-1">Draft Text Copy</label>
+                <label className="block text-xs font-semibold text-gray-700 mb-1">Draft Text</label>
                 <textarea
                   rows={4}
                   required
                   value={newBody}
                   onChange={(e) => setNewBody(e.target.value)}
-                  className="w-full px-3.5 py-2 rounded-xl bg-slate-900 border border-white/10 text-xs text-white font-mono"
+                  className="w-full px-3.5 py-2 rounded-xl bg-white border border-gray-300 text-xs text-gray-900 font-mono shadow-sm focus:outline-none focus:ring-1 focus:ring-violet-500"
                 />
               </div>
 
@@ -980,15 +1109,15 @@ export default function AppHome() {
                 <button
                   type="button"
                   onClick={() => setIsNewModalOpen(false)}
-                  className="px-4 py-2 rounded-xl bg-white/5 text-gray-300 text-xs font-medium"
+                  className="px-4 py-2 rounded-xl bg-white hover:bg-gray-50 border border-gray-300 text-gray-700 text-xs font-medium transition"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="px-5 py-2 rounded-xl bg-amber-600 hover:bg-amber-500 text-white text-xs font-bold transition shadow-md shadow-amber-600/20"
+                  className="px-5 py-2 rounded-xl bg-gray-900 hover:bg-gray-800 text-white text-xs font-bold transition shadow-sm"
                 >
-                  Create Draft
+                  Save Draft
                 </button>
               </div>
             </form>
@@ -997,19 +1126,19 @@ export default function AppHome() {
       )}
 
       {/* ========================================================= */}
-      {/* MODAL: REVIEWER DECISION                                   */}
+      {/* MODAL: REVIEWER DECISION                                  */}
       {/* ========================================================= */}
       {decisionModal.open && (
-        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-          <div className="glass-panel p-6 rounded-3xl border border-white/10 max-w-md w-full space-y-4">
-            <h3 className="text-base font-bold text-white capitalize">
-              Confirm Decision: {decisionModal.type.replace('_', ' ')}
+        <div className="fixed inset-0 bg-gray-900/40 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+          <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-xl max-w-md w-full space-y-4">
+            <h3 className="text-base font-bold text-gray-900 capitalize">
+              {decisionModal.type === 'approved' ? 'Confirm Approval' : 'Send Feedback to Writer'}
             </h3>
 
             {(decisionModal.type === 'changes_requested' || decisionModal.type === 'rejected') && (
               <div>
-                <label className="block text-xs font-semibold text-gray-300 mb-1">
-                  Required Reason / Change Instructions:
+                <label className="block text-xs font-semibold text-gray-700 mb-1">
+                  What should the author change?
                 </label>
                 <textarea
                   rows={3}
@@ -1017,7 +1146,7 @@ export default function AppHome() {
                   value={decisionModal.note}
                   onChange={(e) => setDecisionModal({ ...decisionModal, note: e.target.value })}
                   placeholder="Explain what needs to be revised before approval..."
-                  className="w-full p-3 rounded-xl bg-slate-900 border border-white/10 text-xs text-white"
+                  className="w-full p-3 rounded-xl bg-white border border-gray-300 text-xs text-gray-900 shadow-sm focus:outline-none focus:ring-1 focus:ring-violet-500"
                 />
               </div>
             )}
@@ -1025,15 +1154,15 @@ export default function AppHome() {
             <div className="flex justify-end gap-2 pt-2">
               <button
                 onClick={() => setDecisionModal({ open: false, type: 'approved', note: '' })}
-                className="px-4 py-2 rounded-xl bg-white/5 text-gray-300 text-xs font-medium"
+                className="px-4 py-2 rounded-xl bg-white hover:bg-gray-50 border border-gray-300 text-gray-700 text-xs font-medium transition"
               >
                 Cancel
               </button>
               <button
                 onClick={handleReviewerDecision}
-                className="px-5 py-2 rounded-xl bg-amber-600 hover:bg-amber-500 text-white text-xs font-bold transition shadow-md shadow-amber-600/20"
+                className="px-5 py-2 rounded-xl bg-gray-900 hover:bg-gray-800 text-white text-xs font-bold transition shadow-sm"
               >
-                Submit Decision
+                {decisionModal.type === 'approved' ? 'Approve Draft' : 'Send Feedback'}
               </button>
             </div>
           </div>

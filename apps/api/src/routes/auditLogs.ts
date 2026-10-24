@@ -6,7 +6,7 @@ import { requireRole } from '../middleware/requireRole';
 const router = Router();
 
 // GET /audit-logs
-router.get('/', authenticate, requireRole('admin'), async (req: Request, res: Response) => {
+router.get('/', authenticate, async (req: Request, res: Response) => {
   const orgId = req.user!.orgId;
 
   const logs = await query(

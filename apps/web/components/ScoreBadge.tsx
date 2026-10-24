@@ -10,18 +10,24 @@ interface ScoreBadgeProps {
 }
 
 export function ScoreBadge({ score, size = 'md', showLabel = true }: ScoreBadgeProps) {
-  let color = 'text-emerald-400 bg-emerald-500/10 border-emerald-500/30';
+  let color = 'text-emerald-700 bg-emerald-50 border-emerald-200';
+  let badgeColor = 'text-emerald-600';
   let Icon = ShieldCheck;
-  let statusText = 'Approved / Brand Safe';
+  let statusText = 'Ready to share';
+  let helperText = 'No big issues found. Ready for review or publish.';
 
   if (score < 60) {
-    color = 'text-rose-400 bg-rose-500/10 border-rose-500/30';
+    color = 'text-rose-700 bg-rose-50 border-rose-200';
+    badgeColor = 'text-rose-600';
     Icon = AlertOctagon;
-    statusText = 'Critical Brand Violations';
+    statusText = 'Needs attention';
+    helperText = 'Fix the flagged items before publishing.';
   } else if (score < 85) {
-    color = 'text-amber-400 bg-amber-500/10 border-amber-500/30';
+    color = 'text-amber-700 bg-amber-50 border-amber-200';
+    badgeColor = 'text-amber-600';
     Icon = AlertTriangle;
-    statusText = 'Needs Revisions';
+    statusText = 'Needs a few tweaks';
+    helperText = 'Review the suggested fixes below.';
   }
 
   if (size === 'sm') {
@@ -35,20 +41,20 @@ export function ScoreBadge({ score, size = 'md', showLabel = true }: ScoreBadgeP
 
   if (size === 'lg') {
     return (
-      <div className={`flex items-center gap-4 px-5 py-3 rounded-2xl border ${color} glass-panel`}>
-        <div className="relative flex items-center justify-center w-14 h-14 rounded-xl bg-white/5 border border-white/10 font-black text-2xl">
+      <div className="flex items-center gap-4 px-5 py-3.5 rounded-2xl border border-gray-200 bg-white shadow-sm">
+        <div className={`relative flex items-center justify-center w-14 h-14 rounded-xl font-black text-2xl border ${color}`}>
           {score}
         </div>
         <div>
-          <div className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider opacity-80">
-            <Icon className="w-4 h-4" />
-            Brand Governance Score
+          <div className="flex items-center gap-1.5 text-xs font-bold text-gray-500 uppercase tracking-wider">
+            <Icon className="w-3.5 h-3.5 text-gray-400" />
+            Brand Score
           </div>
-          <div className="text-base font-bold text-white mt-0.5">
-            {statusText}
+          <div className={`text-base font-bold ${badgeColor} mt-0.5`}>
+            {statusText} <span className="text-xs text-gray-400 font-normal">({score}/100)</span>
           </div>
-          <div className="text-xs text-gray-400 mt-0.5">
-            {score >= 85 ? 'Eligible for pre-publication sign-off' : 'Resolve high & medium issues before publishing'}
+          <div className="text-xs text-gray-500 mt-0.5">
+            {helperText}
           </div>
         </div>
       </div>
@@ -56,10 +62,10 @@ export function ScoreBadge({ score, size = 'md', showLabel = true }: ScoreBadgeP
   }
 
   return (
-    <div className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-xl border text-sm font-semibold ${color}`}>
-      <Icon className="w-4 h-4" />
+    <div className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-xl border text-xs font-semibold ${color}`}>
+      <Icon className="w-3.5 h-3.5" />
       <span>{score}/100</span>
-      {showLabel && <span className="text-xs opacity-75 font-normal">({statusText})</span>}
+      {showLabel && <span className="opacity-80 font-normal">({statusText})</span>}
     </div>
   );
 }

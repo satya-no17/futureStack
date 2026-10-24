@@ -115,7 +115,8 @@ CREATE TABLE IF NOT EXISTS reviews (
     status VARCHAR(50) NOT NULL DEFAULT 'queued', -- 'queued' | 'running' | 'done' | 'failed'
     score INT DEFAULT 100,
     started_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-    finished_at TIMESTAMP WITH TIME ZONE
+    finished_at TIMESTAMP WITH TIME ZONE,
+    error_message TEXT
 );
 
 -- 12. issues

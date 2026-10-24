@@ -80,7 +80,10 @@ export async function toneCheck(
     }
 
     return issues;
-  } catch (err) {
+  } catch (err: any) {
+    if (err?.message?.includes('AI not responded')) {
+      throw err;
+    }
     console.error('[ToneCheck] Error during tone check:', err);
     return [];
   }
