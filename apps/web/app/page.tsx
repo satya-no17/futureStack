@@ -788,7 +788,7 @@ export default function AppHome() {
                         <div className="flex items-center gap-2.5">
                           <button
                             type="button"
-                            onClick={handleRunReview}
+                            onClick={() => handleRunReview()}
                             disabled={isReviewing}
                             aria-busy={isReviewing}
                             className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-gray-900 hover:bg-gray-800 text-white text-xs font-bold transition shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
@@ -926,7 +926,7 @@ export default function AppHome() {
 
                         <button
                           type="button"
-                          onClick={handleRunReview}
+                          onClick={() => handleRunReview()}
                           disabled={isReviewing}
                           className="px-3.5 py-1.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold transition shadow-sm whitespace-nowrap self-end sm:self-center disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center gap-1.5"
                         >
@@ -1032,7 +1032,7 @@ export default function AppHome() {
                           <div className="rounded-xl border border-gray-200 bg-white p-7 text-center">
                             <h3 className="text-base font-semibold text-gray-900">This draft has not been checked yet</h3>
                             <p className="mx-auto mt-2 max-w-sm text-sm leading-6 text-gray-600">Run a check to compare the draft with your brand rules, approved facts, and readability guidance.</p>
-                            <button type="button" onClick={handleRunReview} disabled={isReviewing} className="mt-4 rounded-lg bg-gray-900 px-4 py-2.5 text-sm font-semibold text-white hover:bg-gray-800 disabled:opacity-50">Check draft</button>
+                            <button type="button" onClick={() => handleRunReview()} disabled={isReviewing} className="mt-4 rounded-lg bg-gray-900 px-4 py-2.5 text-sm font-semibold text-white hover:bg-gray-800 disabled:opacity-50">Check draft</button>
                           </div>
                         ) : contentDetails.issues.length === 0 ? (
                           <div className="p-8 rounded-2xl bg-white border border-gray-200 text-center space-y-3 shadow-sm">

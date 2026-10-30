@@ -1207,7 +1207,7 @@ export const api = {
     title: string; fileType?: string; totalSlides: number; overallScore: number;
     summary?: { totalIssues?: number; highSeverity?: number; mediumSeverity?: number; lowSeverity?: number; claimsFlagged?: number; typographyIssues?: number; logoWarnings?: number };
     extractionNote?: string;
-    slides: Array<{ slideNumber: number; title: string; body?: string; score: number; issues: Array<{ id: string; type: string; severity: string; title: string; description: string; suggestion: string; quote?: string; explanation?: string }> }>;
+    slides: Array<{ slideNumber: number; title: string; body?: string; score: number; issues: Array<{ id: string; type: string; severity: string; title?: string; description?: string; suggestion: string; quote?: string; explanation?: string }> }>;
   }> {
     const form = new FormData();
     form.append('file', file);
