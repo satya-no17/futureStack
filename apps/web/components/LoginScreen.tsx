@@ -159,7 +159,7 @@ export function LoginScreen({ onBack }: LoginScreenProps) {
             <div className="w-7 h-7 rounded-md bg-gray-900 flex items-center justify-center">
               <ShieldCheck className="w-3.5 h-3.5 text-white" />
             </div>
-            <span className="text-sm font-bold text-gray-900">Inkloom AI</span>
+            <span className="text-sm font-bold text-gray-900">Inkloom</span>
           </div>
         </div>
       </div>
@@ -170,7 +170,7 @@ export function LoginScreen({ onBack }: LoginScreenProps) {
           {/* Header */}
           <div className="text-center space-y-1.5">
             <h1 className="text-2xl font-extrabold tracking-tight text-gray-900">
-              {mode === 'login' ? 'Welcome to Inkloom AI' : 'Create Your Account'}
+              {mode === 'login' ? 'Welcome to Inkloom' : 'Create your account'}
             </h1>
             <p className="text-xs text-gray-500">
               {mode === 'login'

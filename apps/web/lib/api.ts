@@ -254,7 +254,7 @@ function getToken(): string | null {
 }
 
 // Core HTTP fetch with timeout and simulation interception
-async function fetchWithAuth<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
+async function fetchWithAuth<T>(endpoint: string, options: RequestInit = {}, requestTimeoutMs = 8000): Promise<T> {
   if (isSimulatedFailureActive()) {
     throw new Error('Simulated network failure active (?simulate_failure=true)');
   }
@@ -273,8 +273,7 @@ async function fetchWithAuth<T>(endpoint: string, options: RequestInit = {}): Pr
   }
 
   const controller = new AbortController();
-  const timeoutMs = 8000;
-  const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+  const timeoutId = setTimeout(() => controller.abort(), requestTimeoutMs);
 
   try {
     const res = await fetch(`${API_URL}${endpoint}`, {
@@ -293,7 +292,9 @@ async function fetchWithAuth<T>(endpoint: string, options: RequestInit = {}): Pr
       } catch {
         // Ignored
       }
-      throw new Error(errorMsg);
+      const requestError = new Error(errorMsg) as Error & { status?: number };
+      requestError.status = res.status;
+      throw requestError;
     }
 
     if (fallbackActive) {
@@ -838,7 +839,8 @@ export const api = {
         method: 'POST',
         body: JSON.stringify({ term, preferred_replacement, reason, severity })
       });
-    } catch {
+    } catch (error) {
+      if (error instanceof Error && 'status' in error) throw error;
       notifyFallbackState(true, 'Offline mode: word to avoid added locally');
       const item: BannedTermItem = {
         id: `b-sim-${Date.now()}`,
@@ -852,12 +854,33 @@ export const api = {
     }
   },
 
+  async createBannedTermsBulk(terms: Array<{ term: string; preferred_replacement: string; reason: string; severity: string }>): Promise<{ bannedTerms: BannedTermItem[]; importedCount: number; skippedCount: number }> {
+    try {
+      return await fetchWithAuth<{ bannedTerms: BannedTermItem[]; importedCount: number; skippedCount: number }>('/banned-terms/bulk', { method: 'POST', body: JSON.stringify({ terms }) });
+    } catch (error) {
+      if (error instanceof Error && 'status' in error) throw error;
+      notifyFallbackState(true, 'Offline mode: avoid-list entries added locally');
+      const seen = new Set(localState.bannedTerms.map((item) => item.term.trim().toLocaleLowerCase()));
+      const created: BannedTermItem[] = [];
+      for (const entry of terms) {
+        const key = entry.term.trim().toLocaleLowerCase();
+        if (!key || seen.has(key)) continue;
+        seen.add(key);
+        const item: BannedTermItem = { id: `b-sim-${Date.now()}-${created.length}`, term: entry.term.trim(), preferred_replacement: entry.preferred_replacement, reason: entry.reason, severity: (entry.severity as BannedTermItem['severity']) || 'high' };
+        localState.bannedTerms.push(item);
+        created.push(item);
+      }
+      return { bannedTerms: created, importedCount: created.length, skippedCount: terms.length - created.length };
+    }
+  },
+
   async deleteBannedTerm(id: string): Promise<{ success: boolean }> {
     try {
       return await fetchWithAuth(`/banned-terms/${id}`, {
         method: 'DELETE'
       });
-    } catch {
+    } catch (error) {
+      if (error instanceof Error && 'status' in error) throw error;
       notifyFallbackState(true, 'Offline mode: word to avoid removed locally');
       localState.bannedTerms = localState.bannedTerms.filter((b) => b.id !== id);
       return { success: true };
@@ -1038,7 +1061,7 @@ export const api = {
       const score = details?.content.latest_score || 92;
       const currentVer = details?.versions.find((v) => v.id === details.content.current_version_id);
       const rawText = currentVer?.body || title;
-      const watermarkText = watermark ? `\n\n🛡️ Verified by Inkloom AI (Brand Score: ${score}%)` : '';
+      const watermarkText = watermark ? `\n\nInkloom check score: ${score}/100` : '';
 
       return {
         contentId,
@@ -1085,10 +1108,12 @@ export const api = {
     contentId: string,
     payload: {
       channel: string;
-      method: 'intent_url' | 'clipboard_context' | 'webhook';
+      method: 'intent_url' | 'clipboard_context' | 'webhook' | 'cms_api';
       webhookUrl?: string;
       includeWatermark?: boolean;
       targetUrl?: string;
+      cmsProvider?: 'wordpress' | 'webflow';
+      cmsSettings?: Record<string, string | undefined>;
     }
   ): Promise<{
     message: string;
@@ -1097,19 +1122,21 @@ export const api = {
     formattedText?: string;
     characterCount?: number;
     recordId?: string;
+    externalUrl?: string;
   }> {
     try {
       return await fetchWithAuth(`/contents/${contentId}/social-publish`, {
         method: 'POST',
         body: JSON.stringify(payload)
       });
-    } catch {
+    } catch (error) {
+      if (payload.method === 'cms_api' || error instanceof Error && 'status' in error) throw error;
       notifyFallbackState(true, 'Offline mode: simulated social dispatch');
       return {
-        message: `Successfully prepared ${payload.channel} publication in offline simulation mode.`,
+        message: `Simulation only: the ${payload.channel} handoff was not recorded.`,
         status: 'published_simulated',
         intentUrl: 'https://twitter.com/intent/tweet?text=Published%20via%20Inkloom%20AI',
-        formattedText: 'Published via Inkloom AI simulation',
+        formattedText: 'Simulated share handoff',
         characterCount: 34,
         recordId: `soc-${Date.now()}`
       };
@@ -1176,6 +1203,17 @@ export const api = {
     }
   },
 
+  async scanUploadedSlideDeck(file: File): Promise<{
+    title: string; fileType?: string; totalSlides: number; overallScore: number;
+    summary?: { totalIssues?: number; highSeverity?: number; mediumSeverity?: number; lowSeverity?: number; claimsFlagged?: number; typographyIssues?: number; logoWarnings?: number };
+    extractionNote?: string;
+    slides: Array<{ slideNumber: number; title: string; body?: string; score: number; issues: Array<{ id: string; type: string; severity: string; title: string; description: string; suggestion: string; quote?: string; explanation?: string }> }>;
+  }> {
+    const form = new FormData();
+    form.append('file', file);
+    return fetchWithAuth<{ title: string; fileType?: string; totalSlides: number; overallScore: number; summary?: { totalIssues?: number; highSeverity?: number; mediumSeverity?: number; lowSeverity?: number; claimsFlagged?: number; typographyIssues?: number; logoWarnings?: number }; extractionNote?: string; slides: Array<{ slideNumber: number; title: string; body?: string; score: number; issues: Array<{ id: string; type: string; severity: string; title?: string; description?: string; suggestion: string; quote?: string; explanation?: string }> }> }>('/assets/scan-upload', { method: 'POST', body: form }, 300000);
+  },
+
   async getSlideDecks(): Promise<{ assets: Array<{ id: string; title: string; slide_count: number }> }> {
     try {
       return await fetchWithAuth('/assets/slide-decks');
@@ -1196,18 +1234,10 @@ export const api = {
     }
   },
 
-  async applySelfHealingSuggestion(suggestionId: string): Promise<{ success: boolean; message: string }> {
-    try {
-      return await fetchWithAuth<{ success: boolean; message: string }>('/analytics/self-healing/apply', {
-        method: 'POST',
-        body: JSON.stringify({ suggestionId })
-      });
-    } catch {
-      notifyFallbackState(true, 'Offline mode: clarification applied locally');
-      return {
-        success: true,
-        message: 'Successfully applied rule clarification to enterprise brand guidelines.'
-      };
-    }
+  async applySelfHealingSuggestion(suggestionId: string, includeFactUpdate = false): Promise<{ success: boolean; message: string }> {
+    return fetchWithAuth<{ success: boolean; message: string }>('/analytics/self-healing/apply', {
+      method: 'POST',
+      body: JSON.stringify({ suggestionId, includeFactUpdate })
+    });
   }
 };

@@ -16,17 +16,20 @@ export function CommentThread({
 }: CommentThreadProps) {
   const [newComment, setNewComment] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!newComment.trim() || isSubmitting) return;
 
+    setSubmitError(null);
     setIsSubmitting(true);
     try {
       await onAddComment(newComment.trim());
       setNewComment('');
     } catch (err) {
       console.error('Failed to post comment:', err);
+      setSubmitError('Comment was not posted. Your text is still here; please try again.');
     } finally {
       setIsSubmitting(false);
     }
@@ -93,7 +96,7 @@ export function CommentThread({
         <input
           type="text"
           value={newComment}
-          onChange={(e) => setNewComment(e.target.value)}
+          onChange={(e) => { setNewComment(e.target.value); setSubmitError(null); }}
           placeholder="Write feedback or notes for the team..."
           aria-label="Add a review comment"
           className="flex-1 px-3.5 py-2 rounded-xl bg-white border border-gray-300 text-xs text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-violet-500 shadow-sm"
@@ -117,6 +120,7 @@ export function CommentThread({
           )}
         </button>
       </form>
+      {submitError && <p role="alert" className="text-xs text-rose-800">{submitError}</p>}
     </div>
   );
 }

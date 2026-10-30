@@ -427,7 +427,7 @@ router.post('/:id/social-publish', authenticate, async (req: Request, res: Respo
   const userRole = req.user!.role;
   const id = req.params.id as string;
 
-  const { channel, method, webhookUrl, includeWatermark, targetUrl } = req.body;
+  const { channel, method, webhookUrl, includeWatermark, targetUrl, cmsProvider, cmsSettings } = req.body;
 
   if (!channel || !method) {
     res.status(400).json({ error: 'Channel and method are required' });
@@ -457,6 +457,11 @@ router.post('/:id/social-publish', authenticate, async (req: Request, res: Respo
     return;
   }
 
+  if (method === 'cms_api' && content.status === 'published') {
+    res.status(409).json({ error: 'This draft has already been published.' });
+    return;
+  }
+
   const version = await queryOne<{ body: string }>(
     `SELECT body FROM content_versions WHERE id = $1`,
     [content.current_version_id]
@@ -465,7 +470,9 @@ router.post('/:id/social-publish', authenticate, async (req: Request, res: Respo
   const {
     formatSocialText,
     generateSocialIntentUrl,
-    dispatchUniversalWebhook
+    dispatchUniversalWebhook,
+    publishToWordPress,
+    publishToWebflow
   } = await import('../services/publishers/socialPublisher');
 
   const { formattedText, watermark } = formatSocialText(
@@ -478,6 +485,7 @@ router.post('/:id/social-publish', authenticate, async (req: Request, res: Respo
   const intentUrl = generateSocialIntentUrl(channel, content.title, formattedText, targetUrl);
 
   let webhookResult: any = null;
+  let cmsResult: { status: 'published' | 'scheduled'; externalUrl?: string; externalId?: string } | null = null;
   if (method === 'webhook') {
     if (!webhookUrl) {
       res.status(400).json({ error: 'webhookUrl is required for webhook publishing' });
@@ -504,15 +512,52 @@ router.post('/:id/social-publish', authenticate, async (req: Request, res: Respo
     }
   }
 
-  // Lock status to 'published'
-  await query(`UPDATE contents SET status = 'published' WHERE id = $1`, [id]);
+  if (method === 'cms_api') {
+    const scheduled = await queryOne<{ id: string }>(
+      `SELECT id FROM publishing_records WHERE content_id = $1 AND version_id = $2 AND method = 'cms_api' AND status = 'scheduled' LIMIT 1`,
+      [id, content.current_version_id]
+    );
+    if (scheduled) {
+      res.status(409).json({ error: 'This version already has a scheduled CMS post. Cancel it at the destination before scheduling again.' });
+      return;
+    }
+    try {
+      if (cmsProvider === 'wordpress') {
+        cmsResult = await publishToWordPress({
+          siteUrl: String(cmsSettings?.siteUrl || ''),
+          username: String(cmsSettings?.username || ''),
+          applicationPassword: String(cmsSettings?.applicationPassword || ''),
+          title: content.title,
+          body: formattedText,
+          scheduledFor: cmsSettings?.scheduledFor ? String(cmsSettings.scheduledFor) : undefined
+        });
+      } else if (cmsProvider === 'webflow') {
+        cmsResult = await publishToWebflow({
+          accessToken: String(cmsSettings?.accessToken || ''),
+          collectionId: String(cmsSettings?.collectionId || ''),
+          title: content.title,
+          body: formattedText,
+          bodyField: String(cmsSettings?.bodyField || 'post-body')
+        });
+      } else {
+        res.status(400).json({ error: 'Choose WordPress or Webflow.' });
+        return;
+      }
+    } catch (err) {
+      res.status(502).json({ error: 'CMS publishing did not complete.', details: err instanceof Error ? err.message : 'Check the connection details and try again.' });
+      return;
+    }
+  }
+
+  // Record the delivery or handoff. Only an explicit confirmation flow should
+  // change the content itself to `published`; a composer launch is not a post.
 
   // Insert publishing record
   const record = await queryOne<{ id: string; created_at: string }>(
     `INSERT INTO publishing_records (
       organization_id, content_id, version_id, published_by,
       channel, method, destination_url, payload_snapshot, status
-    ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, 'published')
+    ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
     RETURNING id, created_at`,
     [
       orgId,
@@ -521,14 +566,17 @@ router.post('/:id/social-publish', authenticate, async (req: Request, res: Respo
       userId,
       channel,
       method,
-      method === 'webhook' ? webhookUrl : intentUrl,
+      method === 'webhook' ? webhookUrl : method === 'cms_api' ? cmsResult?.externalUrl || cmsProvider : intentUrl,
       JSON.stringify({
         formattedText,
         characterCount: formattedText.length,
         score: content.latest_score,
         watermark,
-        webhookResult
-      })
+        webhookResult,
+        cmsProvider: method === 'cms_api' ? cmsProvider : undefined,
+        cmsResult: method === 'cms_api' ? cmsResult : undefined
+      }),
+      method === 'webhook' ? 'delivered' : method === 'cms_api' ? cmsResult?.status || 'failed' : method === 'intent_url' ? 'composer_opened' : 'copied'
     ]
   );
 
@@ -536,14 +584,26 @@ router.post('/:id/social-publish', authenticate, async (req: Request, res: Respo
   await logAudit(orgId, userId, 'social_publish', 'content', id, {
     channel,
     method,
-    destination: method === 'webhook' ? webhookUrl : intentUrl,
+    destination: method === 'webhook' ? webhookUrl : method === 'cms_api' ? cmsProvider : intentUrl,
     recordId: record?.id,
     complianceScore: content.latest_score
   });
 
+  if (method === 'cms_api' && cmsResult?.status === 'published') {
+    await query(`UPDATE contents SET status = 'published' WHERE id = $1 AND organization_id = $2`, [id, orgId]);
+    await logAudit(orgId, userId, 'publish_content_external', 'content', id, { provider: cmsProvider, externalId: cmsResult.externalId });
+  }
+
   res.json({
-    message: `Successfully published to ${channel}`,
-    status: 'published',
+    message: method === 'cms_api'
+      ? cmsResult?.status === 'scheduled' ? 'WordPress post scheduled.' : `${cmsProvider === 'wordpress' ? 'WordPress' : 'Webflow'} post published.`
+      : method === 'webhook'
+      ? `Delivered to the ${channel} webhook`
+      : method === 'intent_url'
+        ? `Opened the ${channel} composer; finish publishing there`
+        : `Copied the formatted text for ${channel}; publish it there to complete sharing`,
+    status: method === 'cms_api' ? cmsResult?.status || 'published' : method === 'webhook' ? 'delivered' : method === 'intent_url' ? 'composer_opened' : 'copied',
+    externalUrl: cmsResult?.externalUrl,
     intentUrl,
     formattedText,
     characterCount: formattedText.length,

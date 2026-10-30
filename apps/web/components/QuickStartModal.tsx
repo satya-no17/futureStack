@@ -70,98 +70,98 @@ export function QuickStartModal({
     {
       step: 1,
       title: 'Connect Your Brand Rules',
-      subtitle: 'Guidelines, Facts & Words to Avoid',
+      subtitle: 'Guidelines, approved facts, and words to avoid',
       icon: Shield,
       badge: 'Step 1 of 4',
       description:
-        'Set up the foundational knowledge Inkloom AI uses to protect your brand identity across all communication channels.',
+        'Add the language and facts you want reviewers to check against.',
       highlights: [
         {
           label: 'Words to Avoid',
-          text: 'List prohibited terms, legal liabilities, or banned superlatives (e.g. "cheap", "guaranteed").'
+          text: 'List terms and claims your team wants to avoid, with a preferred alternative where useful.'
         },
         {
           label: 'Brand Voice Guidelines',
-          text: 'Upload or configure your official tone documents (professional, encouraging, transparent).'
+          text: 'Add the voice and writing rules your team wants reviewers to apply.'
         },
         {
           label: 'Approved Facts & Numbers',
-          text: 'Index official metrics (customer counts, speed benchmarks) to stop unverified claims before publication.'
+          text: 'Add approved metrics and product facts as sources for claim checks.'
         }
       ],
-      tip: 'Inkloom checks every drafted sentence against these verified sources in milliseconds, so you never publish factual errors or off-brand copy.'
+      tip: 'Checks can miss context. Review the evidence and decide whether each finding applies.'
     },
     {
       step: 2,
       title: 'Write or Paste Drafts',
-      subtitle: 'Multi-Channel Scanning & Slide Decks',
+      subtitle: 'Draft copy and sample presentations',
       icon: FileText,
       badge: 'Step 2 of 4',
       description:
-        'Select your publishing channel (LinkedIn, Twitter/X, Blog, Press Release) or upload multi-page presentation decks.',
+        'Choose a channel for your copy or open the sample presentation scanner.',
       highlights: [
         {
-          label: 'Omni-Channel Drafting',
-          text: 'Switch channels to adapt scanning sensitivity to different audience expectations.'
+          label: 'Choose a channel',
+          text: 'Set where the copy will be used so reviewers have the right context.'
         },
         {
           label: 'Instant Brand Scan',
-          text: 'Click "Check My Words" to run real-time hybrid AI inspection and rule checks.'
+          text: 'Choose "Check draft" to compare the current copy with your configured rules and facts.'
         },
         {
           label: 'Visual Slide Deck Scanner',
-          text: 'Scan presentation decks for logo margins, typography size hierarchy, and factual slide statements.'
+          text: 'Try the sample presentation scan for typography, layout, and claim findings.'
         }
       ],
       tip: 'Problem spans are highlighted directly in your text with color-coded marks so you can spot issues in seconds.'
     },
     {
       step: 3,
-      title: 'Understand Brand Score & 1-Click Fixes',
-      subtitle: 'Transparent Deductions & Instant Replacements',
+      title: 'Review findings and suggested changes',
+      subtitle: 'Understand each score and recommendation',
       icon: Sparkles,
       badge: 'Step 3 of 4',
       description:
-        'No mysterious AI black box. Inkloom provides fully transparent mathematical scoring and one-click remediation.',
+        'See which findings affect the score, inspect the reason, and choose whether to apply each suggestion.',
       highlights: [
         {
           label: 'Base 100 Scoring Formula',
           text: 'Every draft begins at 100 points. Deductions: -15 (Must Fix), -7 (Should Fix), -3 (Tip).'
         },
         {
-          label: 'Clear Passing Thresholds',
-          text: 'Score 85–100 is "Ready to share". 60–84 "Needs a few tweaks". Below 60 "Needs attention".'
+          label: 'Score guide',
+          text: 'Scores summarize detected findings; they do not replace reviewer approval or your judgment.'
         },
         {
           label: '1-Click Replacements',
-          text: 'Click "Use This Fix" on any issue card to automatically swap problematic phrasing and restore your score.'
+          text: 'Choose "Apply suggestion" to save a new version and run the checks again.'
         }
       ],
       tip: 'Applying fixes generates a fresh draft version and immediately recalculates your brand health score.'
     },
     {
       step: 4,
-      title: 'Review, Approve & Publish',
-      subtitle: 'Multi-Persona Workflows & Zero-API Sharing',
+      title: 'Review, approve, and share',
+      subtitle: 'Team approval and external sharing',
       icon: CheckCircle,
       badge: 'Step 4 of 4',
       description:
-        'Collaborate safely across your organization with clear permission boundaries and instant publishing.',
+        'Send a draft for human review, then share it through a connected workflow or platform composer.',
       highlights: [
         {
           label: 'Review Queue & Word Diffs',
           text: 'Reviewers inspect side-by-side word diffs, view changes, and provide constructive revision feedback.'
         },
         {
-          label: 'Zero-API Social Publishing',
-          text: 'Publish approved drafts directly to LinkedIn or Twitter/X with pre-formatted character counters.'
+          label: 'Share handoff',
+          text: 'Open a platform composer or copy formatted text. Complete and confirm the post on that platform.'
         },
         {
           label: 'Offline & Outage Resilience',
-          text: 'Even if external AI services experience downtime, Inkloom seamlessly switches to local fallback data.'
+          text: 'When fallback data is in use, Inkloom shows a banner so you can tell sample data from live workspace data.'
         }
       ],
-      tip: 'Your content pipeline stays reliable and compliant 24/7, with full audit trail logging of all approvals.'
+      tip: 'Review history records Inkloom actions. External platforms do not confirm post completion to this demo.'
     }
   ];
 
@@ -191,7 +191,7 @@ export function QuickStartModal({
             <div>
               <div className="flex items-center gap-2">
                 <h2 id="quickstart-title" className="text-lg font-black tracking-tight text-white">
-                  Inkloom AI — Quick-Start Guide
+                  Inkloom guide
                 </h2>
                 <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-violet-500/30 text-violet-200 border border-violet-400/30">
                   Interactive Tour
@@ -350,10 +350,10 @@ export function QuickStartModal({
             <div className="space-y-4">
               <div className="space-y-1">
                 <h3 className="text-base font-black text-gray-900">
-                  Role Cheat Sheets — Who Does What
+                  Roles and responsibilities
                 </h3>
                 <p className="text-xs text-gray-500">
-                  Inkloom AI adapts its interface and permission controls based on your team persona:
+                  Each role has a different part in the review workflow:
                 </p>
               </div>
 
@@ -366,10 +366,10 @@ export function QuickStartModal({
                     </span>
                   </div>
                   <p className="text-xs text-gray-600 leading-relaxed">
-                    Draft copy, test posts against brand guidelines with &ldquo;Check My Words&rdquo;, apply 1-click suggested fixes, and submit finished drafts to reviewers.
+                    Draft copy, choose Check draft, review the findings, and send the version for approval.
                   </p>
                   <div className="text-[11px] text-blue-700 font-medium bg-blue-50 p-2 rounded-xl">
-                    Focus: Reaching 85+ score and submitting for review.
+                    Focus: Clear findings and an accurate draft.
                   </div>
                 </div>
 
@@ -411,10 +411,10 @@ export function QuickStartModal({
                     </span>
                   </div>
                   <p className="text-xs text-gray-600 leading-relaxed">
-                    Complete end-to-end freedom: compose, run automated safety checks, self-approve, and publish directly to LinkedIn and Twitter/X with zero API setup.
+                    Draft and check copy, then open a platform composer or copy the formatted text. Complete the post on that platform.
                   </p>
                   <div className="text-[11px] text-amber-700 font-medium bg-amber-50 p-2 rounded-xl">
-                    Focus: Fast, error-free solo publishing.
+                    Focus: Check the copy and keep control of the final post.
                   </div>
                 </div>
               </div>
@@ -428,7 +428,7 @@ export function QuickStartModal({
                   How Brand Scores Are Calculated
                 </h3>
                 <p className="text-xs text-gray-500">
-                  Inkloom AI uses an open, transparent formula so creators understand every deduction:
+                  Inkloom shows how findings affect the score:
                 </p>
               </div>
 
@@ -460,20 +460,20 @@ export function QuickStartModal({
 
               <div className="space-y-2">
                 <h4 className="text-xs font-bold text-gray-700 uppercase tracking-wider">
-                  Passing Status Tiers
+                  Score guide
                 </h4>
                 <div className="space-y-2 text-xs">
                   <div className="flex items-center justify-between p-3 rounded-xl bg-emerald-50 border border-emerald-200">
-                    <div className="font-bold text-emerald-900">85–100: Ready to share</div>
-                    <div className="text-emerald-700">Cleared for review and zero-API publishing</div>
+                    <div className="font-bold text-emerald-900">85–100: Few findings</div>
+                    <div className="text-emerald-700">Still review the copy and approval status</div>
                   </div>
                   <div className="flex items-center justify-between p-3 rounded-xl bg-amber-50 border border-amber-200">
-                    <div className="font-bold text-amber-900">60–84: Needs a few tweaks</div>
-                    <div className="text-amber-700">Minor fixes recommended before sign-off</div>
+                    <div className="font-bold text-amber-900">60–84: Review findings</div>
+                    <div className="text-amber-700">Inspect suggestions and decide what to change</div>
                   </div>
                   <div className="flex items-center justify-between p-3 rounded-xl bg-rose-50 border border-rose-200">
-                    <div className="font-bold text-rose-900">&lt;60: Needs attention</div>
-                    <div className="text-rose-700">Must resolve critical issues before publishing</div>
+                    <div className="font-bold text-rose-900">&lt;60: High-priority findings</div>
+                    <div className="text-rose-700">Review the higher-severity items first</div>
                   </div>
                 </div>
               </div>

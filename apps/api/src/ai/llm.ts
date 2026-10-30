@@ -7,6 +7,11 @@ export interface LLMOptions {
   maxTokens?: number;
 }
 
+export interface InlineMedia {
+  mimeType: string;
+  data: Buffer;
+}
+
 /**
  * Universal LLM wrapper returning typed JSON validated by Zod.
  * Tries Gemini API -> Ollama.
@@ -46,6 +51,50 @@ export async function llm<T>(
 
   const rawMsg = lastError?.message?.replace(/^AI not responded:\s*/i, '') || 'Failed to communicate with AI model';
   throw new Error(`AI not responded: ${rawMsg}`);
+}
+
+/** Multimodal Gemini request for OCR and visual brand review. */
+export async function llmWithMedia<Schema extends z.ZodTypeAny>(
+  prompt: string,
+  schema: Schema,
+  media: InlineMedia,
+  options: LLMOptions = { temperature: 0.1 }
+): Promise<z.infer<Schema>> {
+  if (!process.env.GEMINI_API_KEY) {
+    throw new Error('Visual review requires GEMINI_API_KEY to be configured.');
+  }
+  let lastError: unknown;
+  const models = [process.env.GEMINI_MODEL, 'gemini-flash-lite-latest', 'gemini-3.5-flash-lite', 'gemini-3.1-flash-lite-preview'].filter(Boolean) as string[];
+  for (const model of models) {
+    try {
+      const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${process.env.GEMINI_API_KEY}`;
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          contents: [{ parts: [
+            { text: prompt },
+            { inline_data: { mime_type: media.mimeType, data: media.data.toString('base64') } }
+          ] }],
+          generationConfig: { temperature: options.temperature ?? 0.1, maxOutputTokens: options.maxTokens ?? 8192, responseMimeType: 'application/json' }
+        }),
+        signal: AbortSignal.timeout(90000)
+      });
+      if (!response.ok) {
+        const details = await response.text();
+        lastError = new Error(`Gemini HTTP error ${response.status}: ${details.slice(0, 300)}`);
+        if ([404, 429, 503].includes(response.status)) continue;
+        break;
+      }
+      const responseData: any = await response.json();
+      const text = responseData.candidates?.[0]?.content?.parts?.find((part: any) => part.text)?.text;
+      if (!text) throw new Error('Visual model returned no readable result.');
+      return schema.parse(JSON.parse(cleanJsonString(text)));
+    } catch (error) {
+      lastError = error;
+    }
+  }
+  throw new Error(`Visual review could not finish: ${lastError instanceof Error ? lastError.message : 'AI service unavailable'}`);
 }
 
 function cleanJsonString(str: string): string {

@@ -39,11 +39,11 @@ export default function ErrorBoundaryPage({ error, reset }: ErrorProps) {
           </div>
           <div>
             <span className="inline-block text-[11px] font-extrabold uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-amber-100 text-amber-800 mb-1">
-              Application Resilience Active
+              Page error
             </span>
-            <h1 className="text-xl font-black text-gray-950">Something unexpected occurred</h1>
+            <h1 className="text-xl font-semibold text-gray-950">This page could not load</h1>
             <p className="text-xs text-gray-600 mt-0.5">
-              Inkloom AI prevented an unhandled crash and preserved your workspace state.
+              This page could not be loaded. Try again or return to the workspace.
             </p>
           </div>
         </div>
@@ -51,18 +51,16 @@ export default function ErrorBoundaryPage({ error, reset }: ErrorProps) {
         <div className="p-4 rounded-2xl bg-gray-50 border border-gray-200 space-y-2">
           <div className="flex items-center gap-2 text-xs font-semibold text-gray-700">
             <AlertTriangle className="w-4 h-4 text-amber-500" aria-hidden="true" />
-            <span>Diagnostics Notice</span>
+            <span>What you can do</span>
           </div>
-          <p className="text-xs text-gray-600 font-mono break-words leading-relaxed">
-            {error?.message || 'An unexpected rendering error occurred while loading this view.'}
-          </p>
+          <p className="text-xs text-gray-600 leading-relaxed">Reload the page. If the problem continues, contact your workspace administrator.</p>
           {error?.digest && (
             <p className="text-[10px] text-gray-500 font-mono">Error ID: {error.digest}</p>
           )}
         </div>
 
         <div className="space-y-3">
-          <div className="text-xs font-bold text-gray-900">Recommended recovery actions:</div>
+          <div className="text-xs font-semibold text-gray-900">Try one of these actions</div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <button
               onClick={() => reset()}
@@ -79,7 +77,7 @@ export default function ErrorBoundaryPage({ error, reset }: ErrorProps) {
               className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-violet-600 hover:bg-violet-700 text-white text-xs font-bold transition shadow-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-violet-600 focus-visible:ring-offset-2"
             >
               <ArrowRight className="w-4 h-4" aria-hidden="true" />
-              Use Offline Fallback
+              Open sample workspace
             </button>
           </div>
 

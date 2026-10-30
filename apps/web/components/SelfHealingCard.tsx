@@ -28,12 +28,14 @@ interface HealingSuggestion {
   status?: string;
 }
 
-export const SelfHealingCard: React.FC = () => {
+export const SelfHealingCard: React.FC<{ canApply?: boolean }> = ({ canApply = false }) => {
   const [suggestions, setSuggestions] = useState<HealingSuggestion[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [applyingId, setApplyingId] = useState<string | null>(null);
   const [appliedIds, setAppliedIds] = useState<string[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const [message, setMessage] = useState<string | null>(null);
+  const [verifiedFactUpdates, setVerifiedFactUpdates] = useState<Record<string, boolean>>({});
 
   useEffect(() => {
     loadSuggestions();
@@ -52,15 +54,17 @@ export const SelfHealingCard: React.FC = () => {
     }
   }
 
-  async function handleApply(id: string) {
+  async function handleApply(id: string, includeFactUpdate: boolean) {
     if (!id) return;
+    setError(null);
+    setMessage(null);
     setApplyingId(id);
     try {
-      const res = await api.applySelfHealingSuggestion(id);
+      const res = await api.applySelfHealingSuggestion(id, includeFactUpdate);
       setAppliedIds(prev => [...prev, id]);
-      alert(res.message);
+      setMessage(res.message || 'Guideline clarification applied.');
     } catch (err: unknown) {
-      alert(`Could not apply clarification: ${err instanceof Error ? err.message : String(err)}`);
+      setError(`Could not apply this clarification: ${err instanceof Error ? err.message : String(err)}`);
     } finally {
       setApplyingId(null);
     }
@@ -75,13 +79,13 @@ export const SelfHealingCard: React.FC = () => {
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <h3 className="text-base font-black text-gray-900">Self-Healing Brand Rules & Ambiguity Clarifier</h3>
+              <h3 className="text-base font-semibold text-gray-900">Clarify confusing rules</h3>
               <span className="text-[10px] font-extrabold uppercase tracking-wider px-2 py-0.5 rounded-full bg-violet-50 text-violet-700 border border-violet-100">
                 Brand Rule Auto-Sync
               </span>
             </div>
             <p className="text-xs text-gray-500">
-              Discovers guidelines that repeatedly confuse multiple authors, automatically drafts clarifying revisions, and synchronizes brand knowledge across guidelines and fact sheets with 1 click.
+              Surface repeated confusion and review draft guideline changes. Brand leads approve every update.
             </p>
           </div>
         </div>
@@ -95,6 +99,9 @@ export const SelfHealingCard: React.FC = () => {
           <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
         </button>
       </div>
+
+      {error && <div role="alert" className="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-900">{error}</div>}
+      {message && <div role="status" className="rounded-xl border border-violet-200 bg-violet-50 px-4 py-3 text-sm text-violet-950">{message}</div>}
 
       {loading ? (
         <div className="py-8 text-center text-xs text-gray-400 animate-pulse">
@@ -182,18 +189,23 @@ export const SelfHealingCard: React.FC = () => {
                   <div className="p-3 rounded-xl bg-indigo-50/70 border border-indigo-200 text-xs text-indigo-900 flex items-start gap-2">
                     <BookOpen className="w-4 h-4 text-indigo-600 shrink-0 mt-0.5" />
                     <div>
-                      <span className="font-bold text-indigo-700">Fact Sheet Synchronized Update: </span>
+                      <span className="font-bold text-indigo-700">Suggested fact update — verify it against an approved source before adding: </span>
                       {s.suggestedFactUpdate}
                     </div>
                   </div>
                 )}
 
+                {s.suggestedFactUpdate && <label className="flex items-start gap-2 rounded-lg border border-gray-200 bg-white p-3 text-xs leading-5 text-gray-700">
+                  <input type="checkbox" checked={!!verifiedFactUpdates[s.id]} disabled={isApplied || isApplying} onChange={(event) => setVerifiedFactUpdates((current) => ({ ...current, [s.id]: event.target.checked }))} className="mt-0.5 h-4 w-4 rounded border-gray-300 text-violet-600 focus:ring-violet-500" />
+                  <span>I verified this suggested fact against an approved source. Add it to the approved fact base.</span>
+                </label>}
+
                 {/* Action Button */}
                 <div className="flex justify-end pt-2">
                   <button
                     type="button"
-                    onClick={() => handleApply(s.id)}
-                    disabled={isApplied || isApplying}
+                    onClick={() => handleApply(s.id, !!verifiedFactUpdates[s.id])}
+                    disabled={!canApply || isApplied || isApplying}
                     className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold transition shadow-sm disabled:opacity-50 disabled:cursor-not-allowed ${
                       isApplied
                         ? 'bg-emerald-100 text-emerald-800 cursor-default'
@@ -213,7 +225,7 @@ export const SelfHealingCard: React.FC = () => {
                     ) : (
                       <>
                         <Sparkles className="w-4 h-4" />
-                        <span>Apply AI Clarification to Brand Rules</span>
+                        <span>{canApply ? `Apply guideline draft${s.suggestedFactUpdate && verifiedFactUpdates[s.id] ? ' and verified fact' : ''}` : 'Brand Lead approval required'}</span>
                       </>
                     )}
                   </button>

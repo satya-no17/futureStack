@@ -1,431 +1,147 @@
 'use client';
 
 import React from 'react';
-import {
-  ShieldCheck,
-  ArrowRight,
-  Sparkles,
-  FileSearch,
-  Building2,
-  CheckCircle,
-  BarChart3,
-  Lock,
-  Eye,
-  Zap,
-  Users,
-  Globe,
-  ChevronRight,
-  Star,
-  Award,
-} from 'lucide-react';
+import { ShieldCheck, ArrowRight, Check, FileSearch, MessageSquareText, ClipboardCheck } from 'lucide-react';
 
 interface LandingPageProps {
   onGetStarted: () => void;
 }
 
+const steps = [
+  { number: '01', title: 'Write', text: 'Start with a draft or bring in a presentation.' },
+  { number: '02', title: 'Check', text: 'See what needs attention and why, with the rule or fact behind each finding.' },
+  { number: '03', title: 'Review', text: 'Apply or edit suggested changes, then send the draft for approval.' },
+];
+
 export function LandingPage({ onGetStarted }: LandingPageProps) {
   return (
     <div className="landing-page min-h-screen bg-white text-gray-900 selection:bg-violet-200">
-      {/* ─── Navbar ─── */}
-      <nav className="sticky top-0 z-50 bg-white/80 backdrop-blur-lg border-b border-gray-100">
-        <div className="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-lg bg-gray-900 flex items-center justify-center">
-              <ShieldCheck className="w-4.5 h-4.5 text-white" />
-            </div>
-            <span className="text-lg font-bold tracking-tight text-gray-900">Inkloom</span>
+      <nav className="sticky top-0 z-50 border-b border-gray-200 bg-white/95 backdrop-blur">
+        <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
+          <a href="#top" className="flex items-center gap-3" aria-label="Inkloom home">
+            <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-gray-900 text-white">
+              <ShieldCheck className="h-5 w-5" />
+            </span>
+            <span className="text-lg font-bold tracking-tight">Inkloom</span>
+          </a>
+          <div className="hidden items-center gap-8 text-sm text-gray-600 md:flex">
+            <a href="#workflow" className="hover:text-gray-950">How it works</a>
+            <a href="#principles" className="hover:text-gray-950">What we check</a>
           </div>
-
-          <div className="hidden md:flex items-center gap-8 text-sm text-gray-500">
-            <a href="#features" className="hover:text-gray-900 transition-colors">Features</a>
-            <a href="#how-it-works" className="hover:text-gray-900 transition-colors">How It Works</a>
-            <a href="#about" className="hover:text-gray-900 transition-colors">About</a>
-          </div>
-
-          <div className="flex items-center gap-3">
-            <button
-              onClick={onGetStarted}
-              className="text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors hidden sm:inline"
-            >
-              Sign In
-            </button>
-            <button
-              onClick={onGetStarted}
-              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-gray-900 text-white text-sm font-medium hover:bg-gray-800 transition-colors"
-            >
-              Get Started
-              <ArrowRight className="w-3.5 h-3.5" />
-            </button>
-          </div>
+          <button onClick={onGetStarted} className="inline-flex items-center gap-2 rounded-lg bg-gray-900 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-gray-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-600 focus-visible:ring-offset-2">
+            Open the demo <ArrowRight className="h-4 w-4" />
+          </button>
         </div>
       </nav>
 
-      {/* ─── Hero Section ─── */}
-      <section className="relative overflow-hidden">
-        <div className="max-w-6xl mx-auto px-6 pt-20 pb-24 md:pt-28 md:pb-32">
-          <div className="max-w-3xl mx-auto text-center space-y-6">
-            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-gray-50 border border-gray-200 text-xs font-medium text-gray-600">
-              <Sparkles className="w-3.5 h-3.5 text-violet-500" />
-              AI-Powered Brand Governance
-            </div>
-
-            <h1 className="text-4xl sm:text-5xl md:text-6xl font-extrabold tracking-tight text-gray-900 leading-[1.1]">
-              Pre-publish with
-              <span className="block text-transparent bg-clip-text bg-gradient-to-r from-violet-600 via-purple-600 to-indigo-600">
-                confidence.
-              </span>
+      <main id="top">
+        <section className="mx-auto grid max-w-6xl gap-14 px-6 py-16 md:grid-cols-[1.05fr_.95fr] md:items-center md:py-24">
+          <div className="max-w-xl space-y-7">
+            <p className="text-sm font-semibold text-violet-700">Brand review before publishing</p>
+            <h1 className="text-4xl font-semibold leading-tight tracking-tight text-gray-950 sm:text-5xl">
+              Keep every draft true to your brand.
             </h1>
-
-            <p className="text-lg md:text-xl text-gray-500 max-w-2xl mx-auto leading-relaxed font-light">
-              Inkloom automatically scans every draft against your brand guidelines, verified facts, and compliance rules — before anything goes live.
+            <p className="max-w-lg text-lg leading-8 text-gray-600">
+              Check copy against your approved language and facts. Understand each finding, make the call, and keep a clear review history.
             </p>
-
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-2">
-              <button
-                onClick={onGetStarted}
-                className="inline-flex items-center gap-2 px-6 py-3 rounded-lg bg-gray-900 text-white text-sm font-semibold hover:bg-gray-800 transition-all shadow-sm hover:shadow-md"
-              >
-                Start Free Demo
-                <ArrowRight className="w-4 h-4" />
+            <div className="flex flex-wrap items-center gap-4 pt-1">
+              <button onClick={onGetStarted} className="inline-flex items-center gap-2 rounded-lg bg-gray-900 px-5 py-3 text-sm font-semibold text-white transition hover:bg-gray-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-600 focus-visible:ring-offset-2">
+                Try the demo <ArrowRight className="h-4 w-4" />
               </button>
-              <a
-                href="#how-it-works"
-                className="inline-flex items-center gap-1.5 px-5 py-3 rounded-lg border border-gray-200 text-sm font-medium text-gray-600 hover:bg-gray-50 transition-colors"
-              >
-                See How It Works
-                <ChevronRight className="w-4 h-4" />
-              </a>
+              <a href="#workflow" className="text-sm font-semibold text-gray-700 underline decoration-gray-300 underline-offset-4 hover:text-violet-700">See the workflow</a>
             </div>
+            <p className="text-sm text-gray-500">Demo workspace · Sample brand data · Human approval stays in control</p>
           </div>
 
-          {/* Hero visual – abstract card preview */}
-          <div className="mt-16 max-w-4xl mx-auto">
-            <div className="relative rounded-2xl border border-gray-200 bg-gray-50/50 p-8 shadow-sm overflow-hidden">
-              {/* Top bar */}
-              <div className="flex items-center gap-3 mb-6">
-                <div className="flex gap-1.5">
-                  <div className="w-3 h-3 rounded-full bg-gray-200" />
-                  <div className="w-3 h-3 rounded-full bg-gray-200" />
-                  <div className="w-3 h-3 rounded-full bg-gray-200" />
-                </div>
-                <div className="flex-1 h-6 rounded-md bg-gray-100 max-w-xs" />
+          <div className="rounded-2xl border border-gray-200 bg-gray-50 p-5 shadow-sm sm:p-7">
+            <div className="mb-5 flex items-start justify-between gap-4 border-b border-gray-200 pb-4">
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">Example review</p>
+                <h2 className="mt-1 text-base font-semibold text-gray-900">Product launch copy</h2>
               </div>
-
-              {/* Mock content */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="md:col-span-2 space-y-3">
-                  <div className="h-4 rounded bg-gray-200 w-3/4" />
-                  <div className="h-4 rounded bg-gray-200 w-full" />
-                  <div className="h-4 rounded bg-gray-200 w-5/6" />
-                  <div className="mt-4 space-y-2">
-                    <div className="inline-block px-2 py-1 rounded bg-red-50 border border-red-200">
-                      <span className="text-[11px] font-semibold text-red-600">⚠ Unverified claim detected</span>
-                    </div>
-                    <div className="h-4 rounded bg-gray-200 w-full" />
-                    <div className="inline-block px-2 py-1 rounded bg-amber-50 border border-amber-200">
-                      <span className="text-[11px] font-semibold text-amber-600">⚡ Tone adjustment suggested</span>
-                    </div>
-                    <div className="h-4 rounded bg-gray-200 w-2/3" />
-                  </div>
-                </div>
-
-                <div className="space-y-3">
-                  <div className="p-4 rounded-xl bg-white border border-gray-200 space-y-2">
-                    <div className="text-xs font-bold text-gray-700">Brand Score</div>
-                    <div className="text-3xl font-black text-emerald-600">92<span className="text-base text-gray-500 font-normal">/100</span></div>
-                    <div className="text-[11px] text-emerald-600 font-medium">✓ Ready to publish</div>
-                  </div>
-                  <div className="p-4 rounded-xl bg-white border border-gray-200 space-y-2">
-                    <div className="text-xs font-bold text-gray-700">Issues Found</div>
-                    <div className="flex gap-2 text-xs">
-                      <span className="px-2 py-0.5 rounded bg-red-50 text-red-600 font-semibold">1 High</span>
-                      <span className="px-2 py-0.5 rounded bg-amber-50 text-amber-600 font-semibold">2 Medium</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Subtle gradient overlay */}
-              <div className="absolute inset-0 bg-gradient-to-t from-white/60 via-transparent to-transparent pointer-events-none" />
+              <span className="rounded-full border border-amber-200 bg-amber-50 px-2.5 py-1 text-xs font-semibold text-amber-800">2 findings</span>
             </div>
-          </div>
-        </div>
-
-        {/* Background decoration */}
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[800px] rounded-full bg-gradient-to-b from-violet-50 to-transparent opacity-60 blur-3xl pointer-events-none -z-10" />
-      </section>
-
-      {/* ─── Trusted By / Social Proof ─── */}
-      <section className="border-y border-gray-100 bg-gray-50/50">
-        <div className="max-w-6xl mx-auto px-6 py-10">
-          <p className="text-center text-xs font-medium uppercase tracking-widest text-gray-500 mb-8">
-            Built for modern content teams
-          </p>
-          <div className="flex flex-wrap items-center justify-center gap-x-12 gap-y-4 text-gray-300">
-            <div className="flex items-center gap-2 text-sm font-semibold text-gray-600">
-              <Building2 className="w-5 h-5" />
-              <span>Enterprise SaaS</span>
-            </div>
-            <div className="flex items-center gap-2 text-sm font-semibold text-gray-600">
-              <Globe className="w-5 h-5" />
-              <span>Marketing Agencies</span>
-            </div>
-            <div className="flex items-center gap-2 text-sm font-semibold text-gray-600">
-              <Users className="w-5 h-5" />
-              <span>Content Teams</span>
-            </div>
-            <div className="flex items-center gap-2 text-sm font-semibold text-gray-600">
-              <Award className="w-5 h-5" />
-              <span>Regulated Industries</span>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* ─── Features Section ─── */}
-      <section id="features" className="py-20 md:py-28">
-        <div className="max-w-6xl mx-auto px-6">
-          <div className="text-center max-w-2xl mx-auto mb-16">
-            <p className="text-xs font-semibold uppercase tracking-widest text-violet-600 mb-3">Features</p>
-            <h2 className="text-3xl md:text-4xl font-extrabold tracking-tight text-gray-900 mb-4">
-              Everything you need to ship <br className="hidden sm:block" />brand-safe content
-            </h2>
-            <p className="text-base text-gray-500 leading-relaxed">
-              One platform to scan, review, approve, and publish — with complete audit trails.
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {[
-              {
-                icon: FileSearch,
-                title: 'AI Content Scanning',
-                desc: 'Every draft is automatically audited against your brand voice guidelines, verified facts, and banned terms using AI brand intelligence.',
-                color: 'text-violet-600 bg-violet-50',
-              },
-              {
-                icon: ShieldCheck,
-                title: 'Claim Verification',
-                desc: 'Superlative claims, statistics, and product assertions are cross-checked against your approved fact database in real time.',
-                color: 'text-emerald-600 bg-emerald-50',
-              },
-              {
-                icon: Users,
-                title: 'Role-Based Workflows',
-                desc: 'Creators draft, reviewers approve, brand managers configure — each role sees exactly what they need.',
-                color: 'text-blue-600 bg-blue-50',
-              },
-              {
-                icon: Building2,
-                title: 'Multi-Tenant Isolation',
-                desc: 'Each organization gets completely isolated brand rules. The same copy can produce different results per tenant.',
-                color: 'text-amber-600 bg-amber-50',
-              },
-              {
-                icon: BarChart3,
-                title: 'Governance Analytics',
-                desc: 'Track violation trends, identify ambiguous brand rules, and measure team compliance scores over time.',
-                color: 'text-rose-600 bg-rose-50',
-              },
-              {
-                icon: Eye,
-                title: 'Accessibility Audit',
-                desc: 'Built-in WCAG contrast checker and readability analysis ensure every piece of content meets accessibility standards.',
-                color: 'text-cyan-600 bg-cyan-50',
-              },
-            ].map((feature, idx) => (
-              <div
-                key={idx}
-                className="group p-6 rounded-2xl border border-gray-100 bg-white hover:border-gray-200 hover:shadow-lg hover:shadow-gray-100/80 transition-all duration-300"
-              >
-                <div className={`inline-flex items-center justify-center w-10 h-10 rounded-xl ${feature.color} mb-4`}>
-                  <feature.icon className="w-5 h-5" />
-                </div>
-                <h3 className="text-base font-bold text-gray-900 mb-2">{feature.title}</h3>
-                <p className="text-sm text-gray-500 leading-relaxed">{feature.desc}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ─── How It Works ─── */}
-      <section id="how-it-works" className="py-20 md:py-28 bg-gray-50/70 border-y border-gray-100">
-        <div className="max-w-6xl mx-auto px-6">
-          <div className="text-center max-w-2xl mx-auto mb-16">
-            <p className="text-xs font-semibold uppercase tracking-widest text-violet-600 mb-3">How It Works</p>
-            <h2 className="text-3xl md:text-4xl font-extrabold tracking-tight text-gray-900 mb-4">
-              Three steps to brand-safe publishing
-            </h2>
-            <p className="text-base text-gray-500 leading-relaxed">
-              From draft to publication, every piece of content passes through intelligent governance.
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-12">
-            {[
-              {
-                step: '01',
-                title: 'Write & Submit',
-                desc: 'Creators draft marketing copy, blog posts, or social content directly in the platform and submit for AI review.',
-                icon: Sparkles,
-              },
-              {
-                step: '02',
-                title: 'AI Scans & Flags',
-                desc: 'Our AI engine checks tone, verifies claims against your approved facts, and flags any brand violations — all in seconds.',
-                icon: Zap,
-              },
-              {
-                step: '03',
-                title: 'Review & Publish',
-                desc: 'Reviewers approve or request changes with full diff views. Once signed off, content is cleared for publication with an immutable audit trail.',
-                icon: CheckCircle,
-              },
-            ].map((item, idx) => (
-              <div key={idx} className="relative text-center md:text-left">
-                <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-white border border-gray-200 shadow-sm mb-5">
-                  <item.icon className="w-6 h-6 text-gray-700" />
-                </div>
-                <div className="text-xs font-bold text-violet-500 tracking-widest mb-2">STEP {item.step}</div>
-                <h3 className="text-lg font-bold text-gray-900 mb-2">{item.title}</h3>
-                <p className="text-sm text-gray-500 leading-relaxed">{item.desc}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ─── About Section ─── */}
-      <section id="about" className="py-20 md:py-28">
-        <div className="max-w-6xl mx-auto px-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-12 md:gap-16 items-center">
-            <div className="space-y-6">
-              <p className="text-xs font-semibold uppercase tracking-widest text-violet-600">About Inkloom</p>
-              <h2 className="text-3xl md:text-4xl font-extrabold tracking-tight text-gray-900 leading-tight">
-                Brand governance,{' '}
-                <span className="text-transparent bg-clip-text bg-gradient-to-r from-violet-600 to-indigo-600">
-                  reimagined.
-                </span>
-              </h2>
-              <p className="text-base text-gray-500 leading-relaxed">
-                Inkloom AI is a pre-publication governance platform that ensures every piece of content aligns with your brand voice, verified facts, and compliance requirements — before it reaches your audience.
-              </p>
-              <p className="text-base text-gray-500 leading-relaxed">
-                Built with AI brand intelligence and semantic brand search, Inkloom goes beyond simple keyword matching. It understands context, tone, and intent — delivering enterprise-grade brand protection with the simplicity modern teams expect.
-              </p>
-
-              <div className="grid grid-cols-2 gap-4 pt-2">
-                {[
-                  { label: 'AI-Powered Scanning', icon: Sparkles },
-                  { label: 'Immutable Audit Trail', icon: Lock },
-                  { label: 'Multi-Tenant Ready', icon: Building2 },
-                  { label: 'Role-Based Access', icon: Users },
-                ].map((item, idx) => (
-                  <div key={idx} className="flex items-center gap-2.5 text-sm text-gray-700">
-                    <div className="flex-shrink-0 w-6 h-6 rounded-md bg-gray-100 flex items-center justify-center">
-                      <item.icon className="w-3.5 h-3.5 text-gray-500" />
-                    </div>
-                    {item.label}
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* About visual */}
             <div className="space-y-4">
-              <div className="p-6 rounded-2xl border border-gray-100 bg-white shadow-sm">
-                <div className="flex items-start gap-4">
-                  <div className="flex-shrink-0 w-10 h-10 rounded-xl bg-violet-50 flex items-center justify-center">
-                    <Star className="w-5 h-5 text-violet-600" />
-                  </div>
-                  <div>
-                    <div className="text-sm font-bold text-gray-900 mb-1">Semantic Understanding</div>
-                    <p className="text-sm text-gray-500">
-                      Unlike regex-based tools, Inkloom uses its brand knowledge base to understand the meaning behind your brand guidelines — catching violations that pattern matching would miss.
-                    </p>
-                  </div>
+              <div className="rounded-xl border border-gray-200 bg-white p-4">
+                <p className="text-sm leading-7 text-gray-700">Our app is the <span className="rounded bg-rose-100 px-1 text-rose-900">#1 fastest tool</span> for growing teams.</p>
+                <div className="mt-4 flex items-start gap-3 border-t border-gray-100 pt-4">
+                  <FileSearch className="mt-0.5 h-4 w-4 shrink-0 text-violet-700" />
+                  <div><p className="text-sm font-semibold text-gray-900">Unverified ranking</p><p className="mt-1 text-sm leading-6 text-gray-600">No approved source supports “#1 fastest”. Remove the ranking or add evidence.</p></div>
                 </div>
               </div>
-
-              <div className="p-6 rounded-2xl border border-gray-100 bg-white shadow-sm">
-                <div className="flex items-start gap-4">
-                  <div className="flex-shrink-0 w-10 h-10 rounded-xl bg-emerald-50 flex items-center justify-center">
-                    <CheckCircle className="w-5 h-5 text-emerald-600" />
-                  </div>
-                  <div>
-                    <div className="text-sm font-bold text-gray-900 mb-1">Intent-Preserving Fixes</div>
-                    <p className="text-sm text-gray-500">
-                      AI doesn&apos;t just flag problems — it suggests rewrites that fix the violation while preserving the original creative intent and messaging.
-                    </p>
-                  </div>
-                </div>
+              <div className="rounded-xl border border-violet-200 bg-violet-50/70 p-4">
+                <p className="text-xs font-semibold uppercase tracking-wide text-violet-800">Suggested edit · review before applying</p>
+                <p className="mt-2 text-sm leading-6 text-gray-800">“A faster way for growing teams to get work done.”</p>
+                <div className="mt-3 flex items-center gap-2 text-xs text-gray-600"><MessageSquareText className="h-3.5 w-3.5" /> You stay in control of the wording.</div>
               </div>
-
-              <div className="p-6 rounded-2xl border border-gray-100 bg-white shadow-sm">
-                <div className="flex items-start gap-4">
-                  <div className="flex-shrink-0 w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center">
-                    <BarChart3 className="w-5 h-5 text-blue-600" />
-                  </div>
-                  <div>
-                    <div className="text-sm font-bold text-gray-900 mb-1">Ambiguity Detection</div>
-                    <p className="text-sm text-gray-500">
-                      When multiple team members repeatedly violate the same rule, Inkloom flags it as ambiguous — helping you refine guidelines proactively.
-                    </p>
-                  </div>
-                </div>
+              <div className="flex items-center gap-2 border-t border-gray-200 pt-4 text-sm text-gray-600">
+                <ClipboardCheck className="h-4 w-4 text-violet-700" /> Findings include the reason and a path to resolve them.
               </div>
             </div>
           </div>
-        </div>
-      </section>
+        </section>
 
-      {/* ─── CTA Section ─── */}
-      <section className="py-20 md:py-24 border-t border-gray-100">
-        <div className="max-w-3xl mx-auto px-6 text-center space-y-6">
-          <h2 className="text-3xl md:text-4xl font-extrabold tracking-tight text-gray-900">
-            Ready to see it in action?
-          </h2>
-          <p className="text-base text-gray-500 max-w-xl mx-auto leading-relaxed">
-            Explore the full platform with pre-loaded demo data — multiple organizations, roles, and real AI-powered content governance.
-          </p>
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-2">
-            <button
-              onClick={onGetStarted}
-              className="inline-flex items-center gap-2 px-7 py-3.5 rounded-lg bg-gray-900 text-white text-sm font-semibold hover:bg-gray-800 transition-all shadow-sm hover:shadow-md"
-            >
-              Launch Demo
-              <ArrowRight className="w-4 h-4" />
-            </button>
-          </div>
-          <p className="text-xs text-gray-500 pt-1">
-            No account required · Pre-loaded demo credentials · Free forever
-          </p>
-        </div>
-      </section>
-
-      {/* ─── Footer ─── */}
-      <footer className="border-t border-gray-100 bg-gray-50/50">
-        <div className="max-w-6xl mx-auto px-6 py-10">
-          <div className="flex flex-col md:flex-row items-center justify-between gap-6">
-            <div className="flex items-center gap-2.5">
-              <div className="w-7 h-7 rounded-md bg-gray-900 flex items-center justify-center">
-                <ShieldCheck className="w-3.5 h-3.5 text-white" />
-              </div>
-              <span className="text-sm font-bold text-gray-900">Inkloom AI</span>
-              <span className="text-xs text-gray-500 ml-1">· Pre-Publication Brand Governance</span>
+        <section id="workflow" className="border-y border-gray-200 bg-gray-50/70">
+          <div className="mx-auto max-w-6xl px-6 py-16 md:py-20">
+            <div className="max-w-2xl">
+              <p className="text-sm font-semibold text-violet-700">A clear path from draft to approval</p>
+              <h2 className="mt-3 text-3xl font-semibold tracking-tight text-gray-950">Review the work. Keep the decision human.</h2>
             </div>
-
-            <div className="flex items-center gap-6 text-xs text-gray-500">
-              <a href="#features" className="hover:text-gray-700 transition-colors">Features</a>
-              <a href="#how-it-works" className="hover:text-gray-700 transition-colors">How It Works</a>
-              <a href="#about" className="hover:text-gray-700 transition-colors">About</a>
+            <div className="mt-10 grid gap-8 md:grid-cols-3">
+              {steps.map((step) => <article key={step.number} className="border-t-2 border-violet-300 pt-5">
+                <p className="text-xs font-bold tracking-widest text-violet-700">{step.number}</p>
+                <h3 className="mt-3 text-lg font-semibold text-gray-900">{step.title}</h3>
+                <p className="mt-2 max-w-sm text-sm leading-6 text-gray-600">{step.text}</p>
+              </article>)}
             </div>
-
-            <p className="text-xs text-gray-500">
-              © {new Date().getFullYear()} Inkloom. Built for FutureStack.
-            </p>
           </div>
+        </section>
+
+        <section id="principles" className="mx-auto max-w-6xl px-6 py-16 md:py-20">
+          <div className="grid gap-10 md:grid-cols-[.8fr_1.2fr]">
+            <div>
+              <p className="text-sm font-semibold text-violet-700">What Inkloom checks</p>
+              <h2 className="mt-3 text-3xl font-semibold tracking-tight text-gray-950">Useful checks, with the reason attached.</h2>
+            </div>
+            <div className="grid gap-6 sm:grid-cols-2">
+              {[
+                ['Brand language', 'Flag terms and tone that conflict with your guidelines.'],
+                ['Claims and facts', 'Compare statements with the facts your team has approved.'],
+                ['Accessibility', 'Surface readability and contrast issues that can block understanding.'],
+                ['Review history', 'Keep decisions, edits, comments, and approvals together.'],
+              ].map(([title, text]) => <div key={title} className="border-t border-gray-200 pt-4">
+                <div className="flex items-start gap-3"><Check className="mt-0.5 h-4 w-4 shrink-0 text-violet-700" /><div><h3 className="text-sm font-semibold text-gray-900">{title}</h3><p className="mt-1 text-sm leading-6 text-gray-600">{text}</p></div></div>
+              </div>)}
+            </div>
+          </div>
+        </section>
+
+        <section className="border-y border-gray-200 bg-gray-50/70">
+          <div className="mx-auto grid max-w-6xl gap-12 px-6 py-16 md:grid-cols-[.75fr_1.25fr] md:py-20">
+            <div><p className="text-sm font-semibold text-violet-700">Built for accountable reviews</p><h2 className="mt-3 text-3xl font-semibold tracking-tight text-gray-950">Clear reasons. Visible decisions.</h2></div>
+            <div className="grid gap-8 sm:grid-cols-2">
+              <div className="border-t border-gray-200 pt-4"><h3 className="text-sm font-semibold text-gray-900">Evidence beside every flag</h3><p className="mt-2 text-sm leading-6 text-gray-600">Reviewers can see the phrase, the rule behind it, and a practical next step before making a change.</p></div>
+              <div className="border-t border-gray-200 pt-4"><h3 className="text-sm font-semibold text-gray-900">Your team makes the call</h3><p className="mt-2 text-sm leading-6 text-gray-600">Suggestions stay suggestions. Your people review edits and approve what gets shared.</p></div>
+              <div className="border-t border-gray-200 pt-4"><h3 className="text-sm font-semibold text-gray-900">One shared standard</h3><p className="mt-2 text-sm leading-6 text-gray-600">Keep approved facts, preferred language, and words to avoid in one workspace.</p></div>
+              <div className="border-t border-gray-200 pt-4"><h3 className="text-sm font-semibold text-gray-900">A record you can follow</h3><p className="mt-2 text-sm leading-6 text-gray-600">Track reviews and approvals so teams can understand what changed and who decided.</p></div>
+            </div>
+          </div>
+        </section>
+
+        <section className="mx-auto max-w-6xl px-6 py-16 md:py-20">
+          <div className="rounded-2xl border border-violet-100 bg-violet-50/60 px-6 py-10 text-center sm:px-12 sm:py-14">
+            <p className="text-sm font-semibold text-violet-700">Take a closer look</p>
+            <h2 className="mx-auto mt-3 max-w-2xl text-3xl font-semibold tracking-tight text-gray-950">See how your review process can feel.</h2>
+            <p className="mx-auto mt-4 max-w-xl text-sm leading-6 text-gray-600">Explore the sample workspace with example brand rules and review findings. No setup is needed.</p>
+            <button onClick={onGetStarted} className="mt-7 inline-flex items-center gap-2 rounded-lg bg-gray-900 px-5 py-3 text-sm font-semibold text-white transition hover:bg-gray-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-600 focus-visible:ring-offset-2">Open the demo <ArrowRight className="h-4 w-4" /></button>
+          </div>
+        </section>
+      </main>
+
+      <footer className="border-t border-gray-200">
+        <div className="mx-auto flex max-w-6xl flex-col gap-2 px-6 py-6 text-sm text-gray-500 sm:flex-row sm:items-center sm:justify-between">
+          <span className="font-semibold text-gray-800">Inkloom</span>
+          <span>Brand review that keeps people in control.</span>
         </div>
       </footer>
     </div>

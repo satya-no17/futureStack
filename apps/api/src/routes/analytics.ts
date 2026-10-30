@@ -103,16 +103,20 @@ router.get('/self-healing', authenticate, async (req: Request, res: Response) =>
 router.post('/self-healing/apply', authenticate, requireRole('admin'), async (req: Request, res: Response) => {
   const orgId = req.user!.orgId;
   const userId = req.user!.userId;
-  const { suggestionId } = req.body;
+  const { suggestionId, includeFactUpdate = false } = req.body;
 
   if (!suggestionId) {
     res.status(400).json({ error: 'suggestionId is required' });
     return;
   }
+  if (typeof includeFactUpdate !== 'boolean') {
+    res.status(400).json({ error: 'includeFactUpdate must be true or false' });
+    return;
+  }
 
   try {
     const { applyRuleClarification } = await import('../services/analytics/selfHealing');
-    const result = await applyRuleClarification(orgId, userId, suggestionId);
+    const result = await applyRuleClarification(orgId, userId, suggestionId, includeFactUpdate);
     res.json(result);
   } catch (err: any) {
     console.error('[Analytics] Failed to apply rule clarification:', err);

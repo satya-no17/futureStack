@@ -17,6 +17,7 @@ export function ContrastCheckerModal({ isOpen, onClose }: ContrastCheckerModalPr
   const [textAuditIssues, setTextAuditIssues] = useState<Issue[]>([]);
   const [isCheckingContrast, setIsCheckingContrast] = useState(false);
   const [isAuditingText, setIsAuditingText] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -32,12 +33,14 @@ export function ContrastCheckerModal({ isOpen, onClose }: ContrastCheckerModalPr
 
   async function handleCheckContrast() {
     if (isCheckingContrast) return;
+    setErrorMessage(null);
     setIsCheckingContrast(true);
     try {
       const res = await api.checkContrast(fgColor, bgColor);
       setContrastResult(res);
     } catch (err) {
       console.error(err);
+      setErrorMessage(`Could not check these colors. ${err instanceof Error ? err.message : 'Please try again.'}`);
     } finally {
       setIsCheckingContrast(false);
     }
@@ -45,12 +48,14 @@ export function ContrastCheckerModal({ isOpen, onClose }: ContrastCheckerModalPr
 
   async function handleAuditText() {
     if (!testingA11yText.trim() || isAuditingText) return;
+    setErrorMessage(null);
     setIsAuditingText(true);
     try {
       const res = await api.auditA11yText(testingA11yText);
       setTextAuditIssues(res.issues || []);
     } catch (err) {
       console.error(err);
+      setErrorMessage(`Could not check this text. ${err instanceof Error ? err.message : 'Please try again.'}`);
     } finally {
       setIsAuditingText(false);
     }
@@ -63,6 +68,7 @@ export function ContrastCheckerModal({ isOpen, onClose }: ContrastCheckerModalPr
       aria-label="Color Contrast & Readability Checker"
       className="space-y-8 max-w-4xl mx-auto"
     >
+      {errorMessage && <div role="alert" className="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-900">{errorMessage}</div>}
       {/* 1. Color Contrast Tool */}
       <div className="p-6 rounded-2xl bg-white border border-gray-200 shadow-sm space-y-6">
         <div className="flex items-center gap-3">

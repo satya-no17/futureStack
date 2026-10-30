@@ -7,6 +7,7 @@ import { Check, Edit3, BookOpen, Sparkles, CheckCircle2, Loader2 } from 'lucide-
 interface IssueCardProps {
   issue: Issue;
   isSelected: boolean;
+  isDisabled?: boolean;
   onSelect: () => void;
   onAccept: (suggestion: string) => void;
   onDismiss: (reason: string) => void;
@@ -15,6 +16,7 @@ interface IssueCardProps {
 export function IssueCard({
   issue,
   isSelected,
+  isDisabled = false,
   onSelect,
   onAccept,
   onDismiss
@@ -27,14 +29,14 @@ export function IssueCard({
   const [isSkipping, setIsSkipping] = useState(false);
 
   let severityBadge = 'bg-red-50 text-red-700 border-red-200';
-  let severityLabel = 'Must Fix';
+  let severityLabel = 'High priority';
   if (issue.severity === 'medium') {
     severityBadge = 'bg-amber-50 text-amber-700 border-amber-200';
-    severityLabel = 'Should Fix';
+    severityLabel = 'Review';
   }
   if (issue.severity === 'low') {
     severityBadge = 'bg-sky-50 text-sky-700 border-sky-200';
-    severityLabel = 'Tip';
+    severityLabel = 'Suggestion';
   }
 
   const typeLabels: Record<string, string> = {
@@ -93,7 +95,7 @@ export function IssueCard({
       {/* Flagged problem text */}
       <div className="mb-3">
         <div className="text-xs text-gray-500 font-semibold mb-1">
-          Problem words:
+          Flagged text
         </div>
         <div className="px-3 py-1.5 rounded-lg bg-red-50/80 border border-red-200/80 font-mono text-xs text-red-800 font-medium inline-block">
           &ldquo;{issue.quote}&rdquo;
@@ -109,7 +111,7 @@ export function IssueCard({
       {issue.source_ref && (
         <div className="flex items-center gap-1.5 text-xs text-violet-700 bg-violet-50/70 px-3 py-1.5 rounded-lg border border-violet-100 mb-4">
           <BookOpen className="w-3.5 h-3.5 flex-shrink-0" />
-          <span className="font-semibold text-violet-800">Rule citation:</span>
+          <span className="font-semibold text-violet-800">Based on:</span>
           <span className="truncate">{issue.source_ref}</span>
         </div>
       )}
@@ -120,9 +122,10 @@ export function IssueCard({
           <div className="flex items-center justify-between mb-2">
             <div className="flex items-center gap-1.5 text-xs font-bold text-emerald-700">
               <Sparkles className="w-3.5 h-3.5" />
-              Suggested fix:
+              Suggested change
             </div>
             <button
+              disabled={isDisabled}
               onClick={(e) => {
                 e.stopPropagation();
                 setIsEditingSuggestion(!isEditingSuggestion);
@@ -153,9 +156,10 @@ export function IssueCard({
           {/* Action buttons */}
           <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()} onKeyDown={(e) => e.stopPropagation()}>
             <button
-              disabled={isApplying}
+              disabled={isApplying || isDisabled}
+              aria-busy={isApplying}
               onClick={async () => {
-                if (isApplying) return;
+                if (isApplying || isDisabled) return;
                 setIsApplying(true);
                 try {
                   await onAccept(isEditingSuggestion ? customSuggestion : issue.suggestion);
@@ -168,18 +172,18 @@ export function IssueCard({
               {isApplying ? (
                 <>
                   <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                  Applying Fix...
+                  Applying…
                 </>
               ) : (
                 <>
                   <Check className="w-3.5 h-3.5" />
-                  Use This Fix
+                  Apply suggestion
                 </>
               )}
             </button>
 
             <button
-              disabled={isApplying}
+              disabled={isApplying || isDisabled}
               onClick={() => setIsDismissing(!isDismissing)}
               className="px-3 py-2 rounded-xl bg-white hover:bg-gray-50 text-gray-600 hover:text-gray-900 text-xs font-medium border border-gray-200 transition shadow-sm disabled:opacity-50"
             >
@@ -195,7 +199,7 @@ export function IssueCard({
               </label>
               <input
                 type="text"
-                disabled={isSkipping}
+                disabled={isSkipping || isDisabled}
                 value={dismissReason}
                 onChange={(e) => setDismissReason(e.target.value)}
                 placeholder="e.g. Approved exception by team lead"
@@ -204,7 +208,7 @@ export function IssueCard({
               <div className="flex justify-end gap-2">
                 <button
                   type="button"
-                  disabled={isSkipping}
+                  disabled={isSkipping || isDisabled}
                   onClick={() => setIsDismissing(false)}
                   className="px-2.5 py-1 text-xs text-gray-500 hover:text-gray-900 disabled:opacity-50"
                 >
@@ -212,9 +216,9 @@ export function IssueCard({
                 </button>
                 <button
                   type="button"
-                  disabled={isSkipping}
+                  disabled={isSkipping || isDisabled}
                   onClick={async () => {
-                    if (isSkipping) return;
+                    if (isSkipping || isDisabled) return;
                     setIsSkipping(true);
                     try {
                       await onDismiss(dismissReason);

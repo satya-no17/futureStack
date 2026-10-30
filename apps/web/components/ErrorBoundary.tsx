@@ -56,17 +56,12 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
             </div>
             <div className="space-y-1">
               <h3 className="text-sm font-bold text-gray-900">
-                {this.props.fallbackTitle || 'Component Encountered a Problem'}
+                {this.props.fallbackTitle || 'This section could not load'}
               </h3>
               <p className="text-xs text-gray-600 leading-relaxed">
                 {this.props.fallbackDescription ||
-                  'An isolated rendering error occurred in this workspace. Other parts of the platform remain fully functional.'}
+                  'Try reloading this section. If the problem continues, return to another section and contact your workspace administrator.'}
               </p>
-              {this.state.error && (
-                <div className="mt-2 p-2.5 rounded-lg bg-gray-50 border border-gray-200 text-[11px] font-mono text-gray-600 break-all">
-                  {this.state.error.message}
-                </div>
-              )}
             </div>
           </div>
 

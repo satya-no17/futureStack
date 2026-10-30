@@ -117,8 +117,7 @@ Please formulate a crystal-clear, unambiguous guideline revision:
             do: `Anchor claims in verified SLA and compliance documentation.`,
             dont: `Do not use superlatives without approved third-party citations.`
           }
-        ],
-        suggestedFactUpdate: `Acme verified spec: All public statements regarding '${safeTerm}' must reference certified audit reports.`
+        ]
       };
     }
 
@@ -167,7 +166,8 @@ Please formulate a crystal-clear, unambiguous guideline revision:
 export async function applyRuleClarification(
   orgId: string,
   userId: string,
-  suggestionId: string
+  suggestionId: string,
+  includeFactUpdate = false
 ): Promise<{ success: boolean; message: string }> {
   const suggestion = await queryOne<{
     id: string;
@@ -223,7 +223,7 @@ export async function applyRuleClarification(
   }
 
   // 3. If fact update exists, add to fact_documents & fact_chunks
-  if (suggestion.suggested_fact_update) {
+  if (includeFactUpdate && suggestion.suggested_fact_update) {
     const factDoc = await queryOne<{ id: string }>(
       `INSERT INTO fact_documents (organization_id, title, effective_date)
        VALUES ($1, $2, CURRENT_DATE)
@@ -254,11 +254,13 @@ export async function applyRuleClarification(
   await logAudit(orgId, userId, 'apply_self_healing_rule', 'rule_clarification', suggestionId, {
     sourceRef: suggestion.source_ref,
     suggestedRevision: suggestion.suggested_revision,
-    factUpdated: !!suggestion.suggested_fact_update
+    factUpdated: includeFactUpdate && !!suggestion.suggested_fact_update
   });
 
   return {
     success: true,
-    message: `Guideline for '${suggestion.source_ref}' successfully updated and synchronized across vector embeddings.`
+    message: includeFactUpdate && suggestion.suggested_fact_update
+      ? `Guideline for '${suggestion.source_ref}' updated. The fact suggestion you confirmed was added to the approved fact base.`
+      : `Guideline for '${suggestion.source_ref}' updated. No fact-sheet changes were made.`
   };
 }

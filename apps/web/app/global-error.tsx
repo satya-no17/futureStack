@@ -8,7 +8,7 @@ interface GlobalErrorProps {
   reset: () => void;
 }
 
-export default function GlobalError({ error, reset }: GlobalErrorProps) {
+export default function GlobalError({ reset }: GlobalErrorProps) {
   return (
     <html lang="en">
       <body className="min-h-screen bg-slate-50 flex items-center justify-center p-6 text-gray-900 font-sans">
@@ -22,20 +22,14 @@ export default function GlobalError({ error, reset }: GlobalErrorProps) {
           </div>
 
           <div className="space-y-1.5">
-            <span className="inline-block text-[10px] font-extrabold uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-amber-100 text-amber-800">
-              System Fault Recovery
+              <span className="inline-block text-[10px] font-semibold uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-amber-100 text-amber-800">
+              Page error
             </span>
-            <h1 className="text-xl font-black text-gray-950">Application Interruption</h1>
+            <h1 className="text-xl font-semibold text-gray-950">Inkloom could not load</h1>
             <p className="text-xs text-gray-600">
-              A root application error occurred. Inkloom AI isolated the error to safeguard user data.
+              Reload the app. If the problem continues, contact your workspace administrator.
             </p>
           </div>
-
-          {error?.message && (
-            <div className="p-3 bg-gray-50 border border-gray-200 rounded-xl text-left">
-              <p className="text-[11px] text-gray-600 font-mono break-all">{error.message}</p>
-            </div>
-          )}
 
           <div className="flex flex-col gap-2 pt-2">
             <button

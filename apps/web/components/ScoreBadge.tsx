@@ -27,21 +27,21 @@ export function ScoreBadge({
   let color = 'text-emerald-700 bg-emerald-50 border-emerald-200';
   let badgeColor = 'text-emerald-600';
   let Icon = ShieldCheck;
-  let statusText = 'Ready to share (85-100)';
-  let helperText = 'No critical brand issues found. Ready for review or publish.';
+  let statusText = 'Few findings (85–100)';
+  let helperText = 'No critical findings in the completed checks. A person still decides whether to approve or publish.';
 
   if (score < 60) {
     color = 'text-rose-700 bg-rose-50 border-rose-200';
     badgeColor = 'text-rose-600';
     Icon = AlertOctagon;
-    statusText = 'Needs attention (<60)';
-    helperText = 'Fix flagged high-severity items before publishing.';
+    statusText = 'High-priority findings (<60)';
+    helperText = 'Review the high-priority findings before asking for approval.';
   } else if (score < 85) {
     color = 'text-amber-700 bg-amber-50 border-amber-200';
     badgeColor = 'text-amber-600';
     Icon = AlertTriangle;
-    statusText = 'Needs a few tweaks (60-84)';
-    helperText = 'Review suggested fixes to reach the 85+ passing threshold.';
+    statusText = 'Review findings (60–84)';
+    helperText = 'Review the suggested changes and decide what to apply.';
   }
 
   // Close breakdown on Escape or outside click
@@ -74,7 +74,7 @@ export function ScoreBadge({
       className="absolute top-full left-0 mt-2 z-50 w-80 p-4 bg-white rounded-2xl shadow-xl border border-gray-200 text-left text-xs space-y-3 animate-in fade-in-0 zoom-in-95"
     >
       <div className="flex items-center justify-between border-b border-gray-100 pb-2">
-        <span className="font-extrabold text-gray-900 text-sm">Brand Score Formula</span>
+          <span className="font-semibold text-gray-900 text-sm">How this score is calculated</span>
         <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-gray-100 text-gray-700">
           Base: 100 pts
         </span>
@@ -88,7 +88,7 @@ export function ScoreBadge({
         <div className="flex items-center justify-between p-2 rounded-lg bg-rose-50 border border-rose-100">
           <div className="flex items-center gap-1.5">
             <span className="w-2 h-2 rounded-full bg-rose-500" />
-            <span className="font-bold text-rose-800">Must Fix (High)</span>
+            <span className="font-bold text-rose-800">High priority</span>
           </div>
           <div className="text-rose-700 font-semibold">
             {issuesCount?.high !== undefined ? `${issuesCount.high} × -15 pts` : '-15 points each'}
@@ -98,7 +98,7 @@ export function ScoreBadge({
         <div className="flex items-center justify-between p-2 rounded-lg bg-amber-50 border border-amber-100">
           <div className="flex items-center gap-1.5">
             <span className="w-2 h-2 rounded-full bg-amber-500" />
-            <span className="font-bold text-amber-800">Should Fix (Medium)</span>
+            <span className="font-bold text-amber-800">Review</span>
           </div>
           <div className="text-amber-700 font-semibold">
             {issuesCount?.medium !== undefined ? `${issuesCount.medium} × -7 pts` : '-7 points each'}
@@ -108,7 +108,7 @@ export function ScoreBadge({
         <div className="flex items-center justify-between p-2 rounded-lg bg-sky-50 border border-sky-100">
           <div className="flex items-center gap-1.5">
             <span className="w-2 h-2 rounded-full bg-sky-500" />
-            <span className="font-bold text-sky-800">Tip (Low)</span>
+            <span className="font-bold text-sky-800">Suggestion</span>
           </div>
           <div className="text-sky-700 font-semibold">
             {issuesCount?.low !== undefined ? `${issuesCount.low} × -3 pts` : '-3 points each'}
@@ -118,20 +118,20 @@ export function ScoreBadge({
 
       <div className="border-t border-gray-100 pt-2 space-y-1">
         <div className="text-[10px] font-bold uppercase tracking-wider text-gray-400">
-          Approval Status Thresholds
+          Score guide
         </div>
         <ul className="space-y-0.5 text-[11px] text-gray-600">
           <li className="flex items-center gap-1.5">
             <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-            <span><strong className="text-emerald-700">85–100:</strong> Ready to share</span>
+            <span><strong className="text-emerald-700">85–100:</strong> Few findings</span>
           </li>
           <li className="flex items-center gap-1.5">
             <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
-            <span><strong className="text-amber-700">60–84:</strong> Needs a few tweaks</span>
+            <span><strong className="text-amber-700">60–84:</strong> Review findings</span>
           </li>
           <li className="flex items-center gap-1.5">
             <span className="w-1.5 h-1.5 rounded-full bg-rose-500" />
-            <span><strong className="text-rose-700">&lt;60:</strong> Needs attention</span>
+            <span><strong className="text-rose-700">&lt;60:</strong> High-priority findings</span>
           </li>
         </ul>
       </div>
