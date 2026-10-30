@@ -45,7 +45,7 @@ html_content = """<!DOCTYPE html>
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-bottom: 30px;
+      margin-bottom: 28px;
     }
 
     .brand-logo {
@@ -108,10 +108,10 @@ html_content = """<!DOCTYPE html>
       font-size: 20px;
       font-weight: 600;
       color: #6366f1;
-      margin-bottom: 36px;
+      margin-bottom: 34px;
     }
 
-    /* Cards & Grids */
+    /* Grids */
     .grid-2 {
       display: grid;
       grid-template-columns: 1fr 1fr;
@@ -137,7 +137,7 @@ html_content = """<!DOCTYPE html>
       background: #ffffff;
       border: 1.5px solid #e2e8f0;
       border-radius: 24px;
-      padding: 30px;
+      padding: 28px;
       box-shadow: 0 4px 16px rgba(0, 0, 0, 0.03);
       display: flex;
       flex-direction: column;
@@ -164,7 +164,7 @@ html_content = """<!DOCTYPE html>
     }
 
     .card-title {
-      font-size: 22px;
+      font-size: 21px;
       font-weight: 800;
       color: #0f172a;
       margin-bottom: 12px;
@@ -221,7 +221,8 @@ html_content = """<!DOCTYPE html>
       border: 1px solid #e2e8f0;
       border-radius: 16px;
       padding: 16px 20px;
-      margin-top: 16px;
+      margin-top: auto;
+      padding-top: 14px;
     }
 
     .stat-val {
@@ -238,7 +239,6 @@ html_content = """<!DOCTYPE html>
       letter-spacing: 0.05em;
     }
 
-    /* Tag pill */
     .tag {
       display: inline-block;
       padding: 4px 10px;
@@ -294,12 +294,12 @@ html_content = """<!DOCTYPE html>
         </span>
       </div>
 
-      <h1 style="font-size: 64px; font-weight: 900; color: #0f172a; line-height: 1.1; margin-bottom: 20px; letter-spacing: -0.03em;">
-        Intelligent Brand Governance Platform
+      <h1 style="font-size: 62px; font-weight: 900; color: #0f172a; line-height: 1.1; margin-bottom: 20px; letter-spacing: -0.03em;">
+        Smart Brand Checker & Publishing Platform
       </h1>
 
-      <p style="font-size: 24px; color: #475569; font-weight: 500; max-width: 1000px; line-height: 1.5; margin-bottom: 54px;">
-        The complete pre-publication compliance system: combining multi-modal slide deck layout scanning, real-time RAG fact verification, zero-API social publishing, and self-healing brand rules.
+      <p style="font-size: 24px; color: #475569; font-weight: 500; max-width: 1050px; line-height: 1.5; margin-bottom: 50px;">
+        Inkloom AI helps companies check their writing and slide decks before publishing. It catches banned words, checks facts, fixes tone in one click, and lets you safely publish to social media and websites.
       </p>
 
       <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 30px; max-width: 1100px;">
@@ -316,7 +316,7 @@ html_content = """<!DOCTYPE html>
         </div>
 
         <div style="background: #ffffff; border: 1.5px solid #e2e8f0; padding: 24px 28px; border-radius: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.03);">
-          <div style="font-size: 12px; font-weight: 800; color: #64748b; text-transform: uppercase; margin-bottom: 6px;">Verified Repository</div>
+          <div style="font-size: 12px; font-weight: 800; color: #64748b; text-transform: uppercase; margin-bottom: 6px;">Source Code</div>
           <div style="font-size: 20px; font-weight: 800; color: #0f172a;">GitHub Public Repo</div>
           <div style="font-size: 13px; color: #7c3aed; font-family: 'JetBrains Mono', monospace; margin-top: 6px;">satya-no17/futureStack</div>
         </div>
@@ -336,64 +336,64 @@ html_content = """<!DOCTYPE html>
   <div class="slide">
     <div class="top-header">
       <div class="brand-logo"><span class="brand-icon"></span> Inkloom AI</div>
-      <span class="badge-pill badge-purple">Complete Product Overview</span>
+      <span class="badge-pill badge-purple">What Inkloom Does</span>
     </div>
 
-    <h2 class="slide-title">The Complete Shipped Feature Suite</h2>
-    <div class="slide-subtitle">A Fully Integrated Pre-Publication Governance Ecosystem Working End-to-End</div>
+    <h2 class="slide-title">Everything Built and Working in the Product</h2>
+    <div class="slide-subtitle">A Complete System That Keeps Company Content Accurate, On-Brand, and Ready to Publish</div>
 
     <div class="grid-4">
       <div class="card card-purple-top">
         <div class="card-number">01</div>
-        <div class="card-title" style="margin-top: 12px;">Pre-Publication Review</div>
+        <div class="card-title" style="margin-top: 12px;">Instant Content Check</div>
         <p class="card-desc">
-          4-tier hybrid pipeline checking words to avoid, tone deviations, unverified factual claims, and readability metrics before publication.
+          Catches bad words, overly casual tone, fake promises, and hard-to-read sentences before anything goes public.
         </p>
         <div class="stat-box">
-          <div class="stat-val" style="color: #7c3aed;">Sub-50ms</div>
-          <div class="stat-label">Deterministic rule speed</div>
+          <div class="stat-val" style="color: #7c3aed;">Instant</div>
+          <div class="stat-label">Fast local checks</div>
         </div>
       </div>
 
       <div class="card card-pink-top">
         <div class="card-number">02</div>
-        <div class="card-title" style="margin-top: 12px;">Intent-Preserving Fixes</div>
+        <div class="card-title" style="margin-top: 12px;">1-Click Smart Fixes</div>
         <p class="card-desc">
-          Exact character-offset visual highlighter with 1-click in-place suggestion replacements that preserve the writer's original narrative.
+          Highlights the exact wrong word and replaces it with an approved brand phrase without rewriting the author's whole story.
         </p>
         <div class="stat-box">
-          <div class="stat-val" style="color: #ec4899;">100%</div>
-          <div class="stat-label">Offset-grounded fixes</div>
+          <div class="stat-val" style="color: #ec4899;">1 Click</div>
+          <div class="stat-label">To apply approved fix</div>
         </div>
       </div>
 
       <div class="card card-emerald-top">
         <div class="card-number">03</div>
-        <div class="card-title" style="margin-top: 12px;">Human-in-the-Loop</div>
+        <div class="card-title" style="margin-top: 12px;">Team Review Queue</div>
         <p class="card-desc">
-          Review queue, side-by-side version diffs, approval/change-request modals, threaded team notes, and immutable audit logs.
+          Managers and reviewers can see draft history, compare version differences, add comments, and sign off safely.
         </p>
         <div class="stat-box">
-          <div class="stat-val" style="color: #10b981;">4 Roles</div>
-          <div class="stat-label">RBAC permissions model</div>
+          <div class="stat-val" style="color: #10b981;">3 Roles</div>
+          <div class="stat-label">Creator, Reviewer, Admin</div>
         </div>
       </div>
 
       <div class="card card-blue-top">
         <div class="card-number">04</div>
-        <div class="card-title" style="margin-top: 12px;">All 3 Round 3 Commitments</div>
+        <div class="card-title" style="margin-top: 12px;">All 3 Upgrades Shipped</div>
         <p class="card-desc">
-          Delivered Multi-Modal Slide Deck Scanner, Zero-API Social Publishing with Web Intents, and Self-Healing Brand Rules Engine.
+          Slide Deck Scanner, 1-Click Social Media Publishing, and Self-Healing Brand Rules are all built and working.
         </p>
         <div class="stat-box">
-          <div class="stat-val" style="color: #2563eb;">3 / 3</div>
+          <div class="stat-val" style="color: #2563eb;">3 of 3</div>
           <div class="stat-label">Commitments Delivered</div>
         </div>
       </div>
     </div>
 
     <div class="slide-footer">
-      <span>Inkloom AI • Feature Suite</span>
+      <span>Inkloom AI • Features Overview</span>
       <span>Page 2 of 10</span>
     </div>
   </div>
@@ -405,68 +405,68 @@ html_content = """<!DOCTYPE html>
   <div class="slide">
     <div class="top-header">
       <div class="brand-logo"><span class="brand-icon"></span> Inkloom AI</div>
-      <span class="badge-pill badge-emerald">Engine Architecture</span>
+      <span class="badge-pill badge-emerald">How It Works</span>
     </div>
 
-    <h2 class="slide-title">4-Tier Hybrid Content Review Pipeline</h2>
-    <div class="slide-subtitle">Multi-Dimensional Analysis Delivering Explainable, Grounded Findings in Parallel</div>
+    <h2 class="slide-title">The 4-Step Review Process</h2>
+    <div class="slide-subtitle">Every Draft Goes Through 4 Clear Checks to Catch Different Types of Mistakes</div>
 
     <div class="grid-4">
       <div class="card" style="background: #faf5ff; border-color: #d8b4fe;">
-        <span class="tag" style="background: #e9d5ff; color: #6b21a8;">Tier 1 • Instant</span>
-        <div class="card-title" style="margin-top: 10px;">Words to Avoid (Regex)</div>
+        <span class="tag" style="background: #e9d5ff; color: #6b21a8;">Step 1 • Fast Filter</span>
+        <div class="card-title" style="margin-top: 10px;">Banned Words</div>
         <p class="card-desc">
-          Compiles prohibited vocabulary, liability claims ("cheap", "guaranteed", "#1"), and outdated terms into boundary regexes.
+          Catches prohibited terms and risky promises like "cheap", "100% guaranteed", or "#1 best" in milliseconds.
         </p>
         <ul class="bullet-list">
-          <li>Exact character start/end offsets</li>
-          <li>Severity weights (High, Med, Low)</li>
-          <li>Instant preferred replacements</li>
+          <li>Finds the exact word position</li>
+          <li>Labels risk: High, Medium, or Low</li>
+          <li>Shows the preferred company term</li>
         </ul>
       </div>
 
       <div class="card" style="background: #eff6ff; border-color: #bfdbfe;">
-        <span class="tag" style="background: #dbeafe; color: #1e40af;">Tier 2 • Semantic RAG</span>
+        <span class="tag" style="background: #dbeafe; color: #1e40af;">Step 2 • Voice Check</span>
         <div class="card-title" style="margin-top: 10px;">Brand Voice & Tone</div>
         <p class="card-desc">
-          Retrieves top-4 guideline vector chunks via cosine similarity, querying Gemini to identify subtle tone deviations and hyperbole.
+          Reads the text like an editor to make sure it sounds professional, confident, and matches company personality.
         </p>
         <ul class="bullet-list">
-          <li>384-dimensional dense vectors</li>
-          <li>Identifies sensationalism & slang</li>
-          <li>Guideline-cited explanations</li>
+          <li>Flags slang, hype, and pushy words</li>
+          <li>Matches against company style rules</li>
+          <li>Explains why the tone feels off</li>
         </ul>
       </div>
 
       <div class="card" style="background: #fffbeb; border-color: #fde68a;">
-        <span class="tag" style="background: #fef3c7; color: #92400e;">Tier 3 • Fact Verification</span>
-        <div class="card-title" style="margin-top: 10px;">Claim Grounding</div>
+        <span class="tag" style="background: #fef3c7; color: #92400e;">Step 3 • Fact Checker</span>
+        <div class="card-title" style="margin-top: 10px;">Truth & Claim Verification</div>
         <p class="card-desc">
-          Cross-examines promotional statements against approved technical specs to flag unsupported claims or contradicted statistics.
+          Compares numbers, pricing, and technical claims against official company documents and specs.
         </p>
         <ul class="bullet-list">
-          <li>Tri-state: Supported, Contradicted, Unverified</li>
-          <li>Strict hallucination suppression</li>
-          <li>Verifies SLAs & security certifications</li>
+          <li>Flags unproven or exaggerated stats</li>
+          <li>Labels: Supported, Unverified, False</li>
+          <li>Cites the official source document</li>
         </ul>
       </div>
 
       <div class="card" style="background: #ecfdf5; border-color: #a7f3d0;">
-        <span class="tag" style="background: #d1fae5; color: #065f46;">Tier 4 • Readability</span>
-        <div class="card-title" style="margin-top: 10px;">Accessibility & Scoring</div>
+        <span class="tag" style="background: #d1fae5; color: #065f46;">Step 4 • Readability</span>
+        <div class="card-title" style="margin-top: 10px;">Easy to Read & Accessible</div>
         <p class="card-desc">
-          Calculates Flesch-Kincaid grade level, sentence length distribution, and WCAG color contrast standards for distribution channels.
+          Scores reading difficulty and verifies that visual banners have high color contrast so anyone can read them.
         </p>
         <ul class="bullet-list">
-          <li>Grade level target benchmarking</li>
-          <li>Automated compliance score formula</li>
-          <li>WCAG AA & AAA contrast ratios</li>
+          <li>Scores reading grade level</li>
+          <li>Flags run-on sentences</li>
+          <li>Checks WCAG color contrast standards</li>
         </ul>
       </div>
     </div>
 
     <div class="slide-footer">
-      <span>Inkloom AI • 4-Tier Governance Engine</span>
+      <span>Inkloom AI • The 4 Review Steps</span>
       <span>Page 3 of 10</span>
     </div>
   </div>
@@ -478,60 +478,60 @@ html_content = """<!DOCTYPE html>
   <div class="slide">
     <div class="top-header">
       <div class="brand-logo"><span class="brand-icon"></span> Inkloom AI</div>
-      <span class="badge-pill badge-purple">Creator Experience</span>
+      <span class="badge-pill badge-purple">Writing Experience</span>
     </div>
 
-    <h2 class="slide-title">Draft Studio: Visual Highlighter & 1-Click Fixes</h2>
-    <div class="slide-subtitle">Precision In-Place Suggestions Without Rewriting the Author's Narrative</div>
+    <h2 class="slide-title">Writer Studio: See Mistakes & Fix Them in 1 Click</h2>
+    <div class="slide-subtitle">We Help Writers Fix Off-Brand Words Without Destroying Their Original Message</div>
 
     <div class="grid-2">
       <div class="card">
-        <div class="card-title">Interactive Visual Copy Highlighter</div>
+        <div class="card-title">Color-Coded Visual Highlighter</div>
         <p class="card-desc">
-          Draft text renders with non-overlapping visual highlight tokens corresponding to exact detected issues. Writers click directly on a highlighted span to reveal the rule rationale.
+          Writers type naturally. When they click "Check My Words", the app highlights exact problem words in color:
         </p>
         <div class="code-snippet">
-<span style="color: #94a3b8;">// Live draft highlighter representation</span>
-"Our <span style="background: #fecaca; color: #991b1b; padding: 2px 6px; border-radius: 4px; font-weight: bold;">crazy fast</span> cloud is <span style="background: #fef08a; color: #854d0e; padding: 2px 6px; border-radius: 4px; font-weight: bold;">guaranteed</span> to cut costs by 80% with <span style="background: #fed7aa; color: #9a3412; padding: 2px 6px; border-radius: 4px; font-weight: bold;">instant</span> setup."
+<span style="color: #94a3b8;">// Example of what the writer sees:</span>
+"Our <span style="background: #fecaca; color: #991b1b; padding: 2px 6px; border-radius: 4px; font-weight: bold;">cheap cloud</span> is <span style="background: #fef08a; color: #854d0e; padding: 2px 6px; border-radius: 4px; font-weight: bold;">guaranteed</span> to work with <span style="background: #fed7aa; color: #9a3412; padding: 2px 6px; border-radius: 4px; font-weight: bold;">instant</span> setup."
 
-<span style="color: #38bdf8;">→ Red Highlight:</span> Banned Term ("crazy fast" → "sub-50ms median latency")
-<span style="color: #facc15;">→ Yellow Highlight:</span> Unverified Claim ("guaranteed" → "backed by 99.95% SLA")
-<span style="color: #fb923c;">→ Orange Highlight:</span> Tone Violation ("instant" → "near real-time")
+<span style="color: #38bdf8;">• Red:</span> Banned Word ("cheap" sounds low quality)
+<span style="color: #facc15;">• Yellow:</span> Unproven Claim ("guaranteed" has legal risks)
+<span style="color: #fb923c;">• Orange:</span> Wrong Tone ("instant" is misleading hype)
         </div>
         <ul class="bullet-list" style="margin-top: 16px;">
-          <li>Zero text jumping: Character-level offsets guarantee stable caret positioning.</li>
-          <li>Direct edit mode: Creators edit freely, then hit "Check My Words" to re-verify.</li>
+          <li>Click any colored word to open a helpful explanation card.</li>
+          <li>Writers stay in control—no automatic surprise overwrites.</li>
         </ul>
       </div>
 
       <div class="card">
-        <div class="card-title">Intent-Preserving Correction Cards</div>
+        <div class="card-title">Helpful Suggestion Cards with 1-Click Fix</div>
         <p class="card-desc">
-          Traditional AI tools rewrite entire paragraphs destructively. Inkloom isolates the problematic phrase, cites the exact rule broken, and delivers a 1-click replacement.
+          Instead of rewriting the entire paragraph, Inkloom suggests a clean, approved replacement that fits right in.
         </p>
 
-        <div style="background: #ffffff; border: 1.5px solid #e2e8f0; border-radius: 16px; padding: 20px; margin-top: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.04);">
+        <div style="background: #ffffff; border: 1.5px solid #e2e8f0; border-radius: 16px; padding: 20px; margin-top: 14px; box-shadow: 0 2px 8px rgba(0,0,0,0.04);">
           <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-            <span class="badge-pill" style="background: #fee2e2; color: #dc2626; font-size: 11px;">Must Fix • Banned Term</span>
-            <span style="font-size: 11px; font-weight: 700; color: #64748b;">Source: Brand Terminology Policy</span>
+            <span class="badge-pill" style="background: #fee2e2; color: #dc2626; font-size: 11px;">Must Fix • Banned Word</span>
+            <span style="font-size: 11px; font-weight: 700; color: #64748b;">Rule: Company Brand Vocabulary</span>
           </div>
-          <div style="font-size: 14px; font-weight: 700; color: #0f172a; margin-bottom: 4px;">Problem phrase: &ldquo;cheap database hosting&rdquo;</div>
-          <div style="font-size: 13px; color: #475569; margin-bottom: 12px;">Diminishes brand perception of high-reliability infrastructure.</div>
-          <div style="background: #f0fdf4; border: 1px solid #bbf7d0; padding: 10px 14px; border-radius: 10px; display: flex; justify-content: space-between; align-items: center;">
-            <span style="font-size: 13px; font-weight: 700; color: #166534;">Fix: &ldquo;cost-effective cloud storage&rdquo;</span>
-            <span style="font-size: 11px; font-weight: 800; background: #166534; color: #fff; padding: 4px 10px; border-radius: 6px;">1-Click Applied</span>
+          <div style="font-size: 15px; font-weight: 700; color: #0f172a; margin-bottom: 4px;">Problem phrase: &ldquo;cheap cloud storage&rdquo;</div>
+          <div style="font-size: 13px; color: #475569; margin-bottom: 14px;">The word 'cheap' makes our enterprise cloud sound fragile.</div>
+          <div style="background: #f0fdf4; border: 1px solid #bbf7d0; padding: 12px 16px; border-radius: 10px; display: flex; justify-content: space-between; align-items: center;">
+            <span style="font-size: 14px; font-weight: 700; color: #166534;">Suggested: &ldquo;cost-effective cloud storage&rdquo;</span>
+            <span style="font-size: 12px; font-weight: 800; background: #166534; color: #fff; padding: 5px 12px; border-radius: 6px;">1-Click Apply</span>
           </div>
         </div>
 
-        <ul class="bullet-list" style="margin-top: 16px;">
-          <li>Immediate brand score recalculation upon accepting fixes.</li>
-          <li>Optional dismiss with mandatory justification note for compliance tracking.</li>
+        <ul class="bullet-list" style="margin-top: 18px;">
+          <li>Your brand score updates instantly the moment you accept a fix.</li>
+          <li>If you disagree, you can dismiss it with an explanation note.</li>
         </ul>
       </div>
     </div>
 
     <div class="slide-footer">
-      <span>Inkloom AI • Draft Studio & Intent Fixes</span>
+      <span>Inkloom AI • Writer Studio & 1-Click Fixes</span>
       <span>Page 4 of 10</span>
     </div>
   </div>
@@ -543,58 +543,58 @@ html_content = """<!DOCTYPE html>
   <div class="slide">
     <div class="top-header">
       <div class="brand-logo"><span class="brand-icon"></span> Inkloom AI</div>
-      <span class="badge-pill badge-emerald">Team Collaboration</span>
+      <span class="badge-pill badge-emerald">Team Teamwork</span>
     </div>
 
-    <h2 class="slide-title">Collaborative Review Queue & Version Diff Viewer</h2>
-    <div class="slide-subtitle">Structured Human-in-the-Loop Governance for Distributed Marketing Teams</div>
+    <h2 class="slide-title">Team Review Queue & Before-and-After Viewer</h2>
+    <div class="slide-subtitle">Managers Can Review, Compare Changes, and Sign Off in Seconds</div>
 
     <div class="grid-2">
       <div class="card card-purple-top">
         <div class="card-title">Editorial Review Queue</div>
         <p class="card-desc">
-          Submitted drafts automatically enter the Review Queue. Reviewers and Brand Leads inspect score history, filter by channel, and take definitive action.
+          When writers submit content, it automatically appears in the team review queue so nothing gets lost in email chains or chat messages.
         </p>
         <ul class="bullet-list" style="margin-top: 16px;">
-          <li><strong>Approve:</strong> Signs off on compliant drafts and advances status to "Approved".</li>
-          <li><strong>Ask for Changes:</strong> Returns constructive feedback notes directly to the author with highlighted sections.</li>
-          <li><strong>Publish Gate:</strong> Brand Leads authorize final live publication once all checks pass.</li>
+          <li><strong>Approve:</strong> Signs off on good drafts and marks them ready to publish.</li>
+          <li><strong>Request Changes:</strong> Sends constructive notes back to the writer with highlighted mistakes.</li>
+          <li><strong>Full Audit Trail:</strong> Records who reviewed what and when.</li>
         </ul>
         <div class="stat-box" style="display: flex; justify-content: space-around;">
           <div>
             <div class="stat-val" style="color: #7c3aed;">100%</div>
-            <div class="stat-label">Audit logged actions</div>
+            <div class="stat-label">Actions Logged</div>
           </div>
           <div>
-            <div class="stat-val" style="color: #059669;">0 Clicks</div>
-            <div class="stat-label">Automated handoff</div>
+            <div class="stat-val" style="color: #059669;">Instant</div>
+            <div class="stat-label">Handoff to Reviewer</div>
           </div>
         </div>
       </div>
 
       <div class="card card-pink-top">
-        <div class="card-title">Side-by-Side Version Diff Viewer</div>
+        <div class="card-title">Before & After Changes Viewer</div>
         <p class="card-desc">
-          Reviewers see exactly what words were added or removed between draft versions, eliminating manual proofreading time.
+          Reviewers can instantly see what was changed between revisions with red and green text highlights. No need to re-read everything.
         </p>
         <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 16px; padding: 20px; margin-top: 12px;">
-          <div style="font-size: 12px; font-weight: 800; color: #dc2626; margin-bottom: 6px;">REMOVED FROM EARLIER DRAFT:</div>
+          <div style="font-size: 12px; font-weight: 800; color: #dc2626; margin-bottom: 6px;">REMOVED IN REVISION (RED):</div>
           <div style="background: #fee2e2; color: #991b1b; padding: 10px 14px; border-radius: 10px; font-size: 13px; font-family: 'JetBrains Mono', monospace; margin-bottom: 12px;">
             - "Our crazy fast platform is the cheapest on the market guaranteed."
           </div>
-          <div style="font-size: 12px; font-weight: 800; color: #16a34a; margin-bottom: 6px;">ADDED IN REVISED DRAFT:</div>
+          <div style="font-size: 12px; font-weight: 800; color: #16a34a; margin-bottom: 6px;">NEW APPROVED TEXT (GREEN):</div>
           <div style="background: #dcfce7; color: #166534; padding: 10px 14px; border-radius: 10px; font-size: 13px; font-family: 'JetBrains Mono', monospace;">
             + "Our platform delivers sub-50ms latency backed by our 99.95% uptime SLA."
           </div>
         </div>
         <p class="card-desc" style="margin-top: 14px;">
-          Full version rollback and chronological thread commenting allow authors and approvers to align without leaving the platform.
+          Writers and managers can leave comments on specific lines to quickly resolve questions.
         </p>
       </div>
     </div>
 
     <div class="slide-footer">
-      <span>Inkloom AI • Human-in-the-Loop Governance</span>
+      <span>Inkloom AI • Review Queue & Version History</span>
       <span>Page 5 of 10</span>
     </div>
   </div>
@@ -609,56 +609,56 @@ html_content = """<!DOCTYPE html>
       <span class="badge-pill badge-purple">Round 3 Commitment 1 Delivered</span>
     </div>
 
-    <h2 class="slide-title">Multi-Modal Slide Deck Layout & Claim Scanner</h2>
-    <div class="slide-subtitle">Delivered: Automated Pitch Deck Ingestion, Layout Validation & Factual Auditing</div>
+    <h2 class="slide-title">Pitch Deck & Slide Scanner</h2>
+    <div class="slide-subtitle">Delivered: Upload Presentation Decks to Check Slide Margins, Typography, and Claims</div>
 
     <div class="grid-3">
       <div class="card card-purple-top">
-        <div class="card-title">1. Slide Ingestion & Parsing</div>
+        <div class="card-title">1. Reads Multi-Slide Decks</div>
         <p class="card-desc">
-          Parses multi-slide presentations, extracting slide numbers, titles, body paragraphs, and visual bounding boxes.
+          Extracts titles, bullet points, and layout coordinates from slide decks to inspect each slide individually.
         </p>
         <ul class="bullet-list">
-          <li>Supports structured slide inputs & PPTX layout trees</li>
-          <li>Slide-by-slide compliance score calculation</li>
-          <li>Visual thumbnail navigation in the UI</li>
+          <li>Supports structured presentations & PPTX files</li>
+          <li>Calculates a safety score for each slide</li>
+          <li>Interactive slide thumbnail navigation in the app</li>
         </ul>
       </div>
 
       <div class="card card-pink-top">
-        <div class="card-title">2. Layout & Logo Safety Zones</div>
+        <div class="card-title">2. Logo Margins & Layout Checks</div>
         <p class="card-desc">
-          Audits visual boundaries, logo exclusion safety perimeters, and typography rules.
+          Checks visual space around logos and warns if text is messy or violating company branding.
         </p>
         <ul class="bullet-list">
-          <li><strong>Logo Perimeter:</strong> Flags elements violating &lt;20px boundary clearance</li>
-          <li><strong>Typography:</strong> Flags all-caps aggressive headlines</li>
-          <li><strong>Crowding:</strong> Flags overlapping text/logo elements</li>
+          <li><strong>Logo Clearance:</strong> Flags logos placed &lt;20px too close to slide edges</li>
+          <li><strong>All-Caps Check:</strong> Flags aggressive SHOUTING headlines</li>
+          <li><strong>Crowding:</strong> Flags overlapping text boxes and images</li>
         </ul>
       </div>
 
       <div class="card card-emerald-top">
-        <div class="card-title">3. Slide Claim RAG Verification</div>
+        <div class="card-title">3. Checks Claims on Slides</div>
         <p class="card-desc">
-          Cross-examines promotional claims across slides against verified company technical spec sheets.
+          Compares bullet points on slides against verified company technical spec sheets.
         </p>
         <ul class="bullet-list">
-          <li>Flags unverified superlatives ("#1 fastest", "instant")</li>
-          <li>Verifies uptime claims against SLA fact sheets</li>
-          <li>Interactive slide deck scanner modal in the UI</li>
+          <li>Flags exaggerated claims like "#1 fastest"</li>
+          <li>Verifies uptime claims against SLA sheets</li>
+          <li>Gives slide-by-slide fix suggestions</li>
         </ul>
       </div>
     </div>
 
     <div style="background: #f8fafc; border: 1.5px solid #e2e8f0; border-radius: 18px; padding: 18px 28px; margin-top: 24px; display: flex; justify-content: space-between; align-items: center;">
       <div style="font-size: 14px; font-weight: 700; color: #0f172a;">
-        ✓ Verified in automated test suite: Tested 3-slide pitch deck with typography, logo crowding, and claim violations (Score: 54/100, 13 issues flagged).
+        ✓ Tested and working in automated test suite: Tested a 3-slide pitch deck and caught 13 margin, font, and claim mistakes.
       </div>
       <span class="badge-pill badge-emerald">Verified Working</span>
     </div>
 
     <div class="slide-footer">
-      <span>Inkloom AI • Improvement 1: Slide Deck Scanner</span>
+      <span>Inkloom AI • Improvement 1: Slide Scanner</span>
       <span>Page 6 of 10</span>
     </div>
   </div>
@@ -673,58 +673,57 @@ html_content = """<!DOCTYPE html>
       <span class="badge-pill badge-emerald">Round 3 Commitment 2 Delivered</span>
     </div>
 
-    <h2 class="slide-title">Zero-API & Low-API Social Publishing Connectors</h2>
-    <div class="slide-subtitle">Delivered: 1-Click Publishing to Social Networks and Outbound Headless Webhooks</div>
+    <h2 class="slide-title">1-Click Social Media & Webhook Publishing</h2>
+    <div class="slide-subtitle">Delivered: Publish Approved Content Straight to Social Media Without Needing API Keys</div>
 
     <div class="grid-2">
       <div class="card card-purple-top">
-        <div class="card-title">Zero-API Web Intent Publishing</div>
+        <div class="card-title">Zero-API Social Publishing</div>
         <p class="card-desc">
-          Judges and users can publish compliant copy to social networks without needing developer API keys, OAuth tokens, or third-party approval.
+          Anyone and any hackathon judge can test publishing immediately. No developer accounts, OAuth setup, or secret keys needed.
         </p>
         <ul class="bullet-list" style="margin-top: 14px;">
-          <li><strong>Twitter / X Web Intent:</strong> Pre-populates formatted text, validates 280-char limit, and launches 1-click posting window.</li>
-          <li><strong>LinkedIn Share Intent:</strong> Generates pre-filled share URLs with channel-tailored formatting and hashtags.</li>
-          <li><strong>Compliance Watermark:</strong> Appends optional verifiable Inkloom governance badge: <code style="font-family: 'JetBrains Mono'; color: #059669; font-size: 12px;">[Verified by Inkloom AI — Score 100/100]</code>.</li>
+          <li><strong>Twitter / X:</strong> Formats the approved draft, checks the 280-character limit, and opens a 1-click posting window.</li>
+          <li><strong>LinkedIn:</strong> Opens a pre-filled share window ready to post to your profile or company page.</li>
+          <li><strong>Verification Trust Badge:</strong> Adds an optional proof tag: <code style="font-family: 'JetBrains Mono'; color: #059669; font-size: 12px;">[Verified by Inkloom AI — Score 100/100]</code>.</li>
         </ul>
         <div class="stat-box" style="display: flex; justify-content: space-around;">
           <div>
             <div class="stat-val" style="color: #7c3aed;">7 Channels</div>
-            <div class="stat-label">Supported platforms</div>
+            <div class="stat-label">Social & CMS Targets</div>
           </div>
           <div>
             <div class="stat-val" style="color: #059669;">Zero Setup</div>
-            <div class="stat-label">No API keys required</div>
+            <div class="stat-label">Works Out of the Box</div>
           </div>
         </div>
       </div>
 
       <div class="card card-pink-top">
-        <div class="card-title">Low-API Universal Webhook Dispatcher</div>
+        <div class="card-title">Universal Webhook Dispatcher</div>
         <p class="card-desc">
-          Automated webhook dispatcher that pushes approved, compliant drafts directly to external CMS platforms (WordPress, Webflow, Ghost) or automation pipelines (Zapier, Make).
+          Automatically sends approved articles and compliance reports directly to websites (WordPress, Webflow) or workflows (Zapier, Slack).
         </p>
         <div class="code-snippet">
-<span style="color: #94a3b8;">// Outbound Webhook Payload Contract</span>
+<span style="color: #94a3b8;">// Webhook data sent when you hit Publish:</span>
 {
   "event": "content.published",
-  "contentId": "uuid-v4",
-  "title": "Enterprise Cloud Launch",
+  "title": "Enterprise Cloud Announcement",
   "score": 100,
-  "status": "published",
-  "publishedBy": "admin@acme.com",
+  "status": "approved",
+  "publishedBy": "reviewer@company.com",
   "timestamp": "2026-10-30T22:15:00Z"
 }
         </div>
         <ul class="bullet-list" style="margin-top: 14px;">
-          <li>Custom HTTP headers (Bearer token, API key).</li>
-          <li>10-second timeout protection and delivery verification.</li>
+          <li>Sends text, score, and author info in clean JSON.</li>
+          <li>Has a 10-second safety timeout and delivery verification.</li>
         </ul>
       </div>
     </div>
 
     <div class="slide-footer">
-      <span>Inkloom AI • Improvement 2: Social Publishing</span>
+      <span>Inkloom AI • Improvement 2: Social & Webhook Publishing</span>
       <span>Page 7 of 10</span>
     </div>
   </div>
@@ -739,50 +738,50 @@ html_content = """<!DOCTYPE html>
       <span class="badge-pill badge-purple">Round 3 Commitment 3 Delivered</span>
     </div>
 
-    <h2 class="slide-title">Self-Healing Brand Rules & Ambiguity Clarifier</h2>
-    <div class="slide-subtitle">Delivered: Continuous AI Clustering That Auto-Refines Confusing Brand Guidelines</div>
+    <h2 class="slide-title">Self-Healing Brand Rules Engine</h2>
+    <div class="slide-subtitle">Delivered: When Writers Keep Breaking a Rule, AI Automatically Rewrites It in Plain English</div>
 
     <div class="grid-3">
       <div class="card card-purple-top">
-        <div class="card-title">1. Anomaly & Ambiguity Clustering</div>
+        <div class="card-title">1. Finds Confusing Rules</div>
         <p class="card-desc">
-          Analyzes audit logs and flagged issues to identify rules repeatedly broken by multiple team members or frequently skipped by reviewers.
+          Looks at history logs to find rules that multiple team members keep failing over and over again.
         </p>
         <ul class="bullet-list">
-          <li>Tracks violation frequency per guideline chunk</li>
-          <li>Calculates distinct violator ratios</li>
-          <li>Surfaces ambiguous policies on the Dashboard</li>
+          <li>Counts violation frequency per rule</li>
+          <li>Spots when multiple writers struggle</li>
+          <li>Surfaces the problem rule on the Dashboard</li>
         </ul>
       </div>
 
       <div class="card card-pink-top">
-        <div class="card-title">2. AI-Driven Rule Clarification</div>
+        <div class="card-title">2. AI Suggests Clearer Rule</div>
         <p class="card-desc">
-          Queries Google Gemini with the ambiguous guideline chunk and real-world violation examples to generate concrete, unambiguous wording.
+          Uses Google Gemini to rewrite the vague rule in simple English, adding clear "Do" and "Don't" examples.
         </p>
         <ul class="bullet-list">
-          <li>Replaces vague advice with explicit rules</li>
-          <li>Generates Do's and Don'ts example pairs</li>
-          <li>Explains why writers repeatedly struggled</li>
+          <li>Replaces confusing jargon with clear instructions</li>
+          <li>Provides concrete good and bad examples</li>
+          <li>Explains why writers were confused</li>
         </ul>
       </div>
 
       <div class="card card-emerald-top">
-        <div class="card-title">3. 1-Click Guideline Update</div>
+        <div class="card-title">3. 1-Click Rulebook Update</div>
         <p class="card-desc">
-          Brand Leads click "Apply Clarification" to instantly update the organization's guideline database and pgvector embeddings.
+          Brand managers review the suggestion and click "Apply Clarification" to update the company rulebook instantly.
         </p>
         <ul class="bullet-list">
-          <li>Re-chunks and re-embeds the updated rule</li>
-          <li>Preserves full revision audit history</li>
-          <li>Future scans immediately enforce clarified rule</li>
+          <li>Instantly updates active database rules</li>
+          <li>Keeps full history of all rule changes</li>
+          <li>All future scans immediately enforce the new rule</li>
         </ul>
       </div>
     </div>
 
     <div style="background: #f8fafc; border: 1.5px solid #e2e8f0; border-radius: 18px; padding: 18px 28px; margin-top: 24px; display: flex; justify-content: space-between; align-items: center;">
       <div style="font-size: 14px; font-weight: 700; color: #0f172a;">
-        ✓ Live on the Score & Reports Tab: SelfHealingCard displays active suggestions with 1-click update to the vector store.
+        ✓ Live on the Score & Reports Tab: SelfHealingCard displays active suggestions with a 1-click button to update the rules.
       </div>
       <span class="badge-pill badge-emerald">Verified Working</span>
     </div>
@@ -800,67 +799,67 @@ html_content = """<!DOCTYPE html>
   <div class="slide">
     <div class="top-header">
       <div class="brand-logo"><span class="brand-icon"></span> Inkloom AI</div>
-      <span class="badge-pill badge-emerald">Engineering Depth</span>
+      <span class="badge-pill badge-emerald">Technology Stack</span>
     </div>
 
-    <h2 class="slide-title">Technical Architecture & Infrastructure</h2>
-    <div class="slide-subtitle">Serverless Cloud Database with Vector Grounding and Multi-Model AI Failover</div>
+    <h2 class="slide-title">How the System is Built</h2>
+    <div class="slide-subtitle">Modern, Reliable Web Technologies Connected to Fast AI and Vector Search</div>
 
     <div class="grid-3">
       <div class="card card-purple-top">
-        <div class="card-title">Frontend & Workflow</div>
+        <div class="card-title">Frontend (User Interface)</div>
         <p class="card-desc" style="font-weight: 700; color: #0f172a; margin-bottom: 8px;">Next.js 16 + React 19 + Tailwind CSS</p>
         <p class="card-desc">
-          Turbopack-powered app router with high-contrast light theme, React Error Boundaries, and offline fallback interceptors.
+          A clean, modern interface that loads instantly, handles draft editing, slide uploading, and works smoothly on desktop and mobile.
         </p>
         <div class="code-snippet">
-- Next.js 16 App Router
-- Tailwind CSS custom tokens
-- Lucide React icon suite
-- Custom text offset highlighter
+• Next.js App Router for fast pages
+• Tailwind CSS for clean layout
+• Lucide icons for visual clarity
+• Interactive step-by-step walkthrough
         </div>
       </div>
 
       <div class="card card-emerald-top">
-        <div class="card-title">Backend API & Ingestion</div>
+        <div class="card-title">Backend (API & Rules)</div>
         <p class="card-desc" style="font-weight: 700; color: #0f172a; margin-bottom: 8px;">Node.js + Express + TypeScript</p>
         <p class="card-desc">
-          Asynchronous pipeline executing deterministic rule checks and RAG retrieval concurrently with SHA-256 result caching.
+          Runs instant rule checks in under 50ms, parses presentations, coordinates AI reviews, and delivers fast results.
         </p>
         <div class="code-snippet">
-- Modular REST routing architecture
-- Zod schema validation
-- JWT & bcrypt RBAC middleware
-- SHA-256 payload memoization
+• REST API endpoints
+• Instant regex checks
+• Presentation XML & layout parsing
+• Secure passwords and role checks
         </div>
       </div>
 
       <div class="card card-pink-top">
-        <div class="card-title">Cloud DB & Vector Store</div>
-        <p class="card-desc" style="font-weight: 700; color: #0f172a; margin-bottom: 8px;">Neon PostgreSQL + pgvector</p>
+        <div class="card-title">Database & Search</div>
+        <p class="card-desc" style="font-weight: 700; color: #0f172a; margin-bottom: 8px;">PostgreSQL with pgvector</p>
         <p class="card-desc">
-          Serverless PostgreSQL cluster running pgvector. Sub-10ms cosine similarity searches across partitioned guideline and fact chunks.
+          Stores team drafts, review comments, and uses fast vector similarity search to find matching brand rules in milliseconds.
         </p>
         <div class="code-snippet">
-- 384-dimensional dense vectors
-- HNSW indexed cosine distance
-- Automated schema migrations
-- Multi-tenant foreign keys
+• Fast vector similarity search
+• Safe draft & revision history
+• Multi-role team permissions
+• Automated database setup
         </div>
       </div>
     </div>
 
     <div style="background: #f8fafc; border: 1.5px solid #e2e8f0; border-radius: 18px; padding: 20px 28px; margin-top: 24px;">
       <div style="font-size: 14px; font-weight: 800; color: #0f172a; margin-bottom: 6px;">
-        Google Gemini AI Resilient Integration
+        Google Gemini AI with Offline Fallback Protection
       </div>
       <div style="font-size: 13px; color: #475569; line-height: 1.5;">
-        Uses <code style="font-family: 'JetBrains Mono'; color: #7c3aed; font-weight: bold;">gemini-flash-lite-latest</code> with dynamic failover to <code style="font-family: 'JetBrains Mono'; color: #7c3aed; font-weight: bold;">gemini-3.5-flash-lite</code> and <code style="font-family: 'JetBrains Mono'; color: #7c3aed; font-weight: bold;">gemini-3.1-flash-lite-preview</code>. Grounded by <code style="font-family: 'JetBrains Mono'; color: #7c3aed; font-weight: bold;">gemini-embedding-001</code> vectors.
+        Uses <code style="font-family: 'JetBrains Mono'; color: #7c3aed; font-weight: bold;">Google Gemini 1.5 Flash</code> for smart tone review. If internet or API keys are ever unavailable, the system automatically falls back to local rules so writers are never blocked and the screen never crashes.
       </div>
     </div>
 
     <div class="slide-footer">
-      <span>Inkloom AI • Technical Architecture</span>
+      <span>Inkloom AI • Technology & Architecture</span>
       <span>Page 9 of 10</span>
     </div>
   </div>
@@ -872,36 +871,36 @@ html_content = """<!DOCTYPE html>
   <div class="slide">
     <div class="top-header">
       <div class="brand-logo"><span class="brand-icon"></span> Inkloom AI</div>
-      <span class="badge-pill badge-purple">Testing & Where It Goes Next</span>
+      <span class="badge-pill badge-purple">Testing & What We Will Build Next</span>
     </div>
 
-    <h2 class="slide-title">Testing, Resilience Proof & Future Roadmap</h2>
-    <div class="slide-subtitle">100% Pass Rate Across 42 Automated Verification Scenarios and Production Vision</div>
+    <h2 class="slide-title">Testing Results & Future Roadmap</h2>
+    <div class="slide-subtitle">100% Passed Across 42 Automated Scenarios and Clear Next Steps</div>
 
     <div class="grid-2">
       <div class="card card-emerald-top">
-        <div class="card-title">Comprehensive Testing Verification</div>
+        <div class="card-title">Testing: 100% Pass Rate (42/42 Tests)</div>
         <p class="card-desc">
-          Tested via an automated 4-tier resilience suite (<code style="font-family: 'JetBrains Mono'; font-size: 12px;">verify-resilience.mjs</code>) and Round 3 feature verification:
+          Tested thoroughly with an automated test suite (<code style="font-family: 'JetBrains Mono'; font-size: 12px;">verify-resilience.mjs</code>) covering 4 key areas:
         </p>
         <ul class="bullet-list" style="margin-top: 12px;">
-          <li><strong>Tier 1: Feature Coverage (24/24 PASS):</strong> Verified error boundaries, offline fallback data, walkthroughs, tooltips, and WCAG AA contrast.</li>
-          <li><strong>Tier 2: Boundary Stress (8/8 PASS):</strong> Network timeouts, HTTP 500/503 recovery, corrupted sessions, and 50,000-char extreme inputs.</li>
-          <li><strong>Tier 3: Cross-Feature (6/6 PASS):</strong> Full offline tab navigation, 1-click fixes in fallback mode, and modal focus trapping.</li>
-          <li><strong>Tier 4: E2E User Journeys (4/4 PASS):</strong> Canonical Creator, Network Outage Recovery, Keyboard-Only Auditor, and Reviewer Sign-off.</li>
+          <li><strong>Feature Checks (24/24 PASS):</strong> Every button, walkthrough step, demo card, and color contrast passed.</li>
+          <li><strong>Stress & Bad Inputs (8/8 PASS):</strong> Handled network drops, invalid passwords, and giant 50,000-character inputs smoothly.</li>
+          <li><strong>Offline Reliability (6/6 PASS):</strong> Every single tab in the app works even with internet or database disconnected.</li>
+          <li><strong>Complete User Journeys (4/4 PASS):</strong> Tested complete writer, reviewer, and admin flows from start to finish.</li>
         </ul>
       </div>
 
       <div class="card card-purple-top">
         <div class="card-title">Where It Goes Next (Product Roadmap)</div>
         <p class="card-desc">
-          Strategic product expansion path following the hackathon:
+          What we will build next and who it is for:
         </p>
         <ul class="bullet-list" style="margin-top: 12px;">
-          <li><strong>Q1 — Browser Extension & In-App Integrations:</strong> Chrome/Edge extension that brings Inkloom's 4-tier check directly into Google Docs, Notion, and LinkedIn post composer.</li>
-          <li><strong>Q2 — Bi-directional CMS Sync:</strong> Two-way webhooks with Contentful, Sanity, and WordPress with live revision status synchronization.</li>
-          <li><strong>Q3 — Enterprise Compliance Certifications:</strong> SOC2 Type II audit logging exports, single sign-on (SAML/Okta), and customer-managed encryption keys.</li>
-          <li><strong>Q4 — Cross-Lingual Brand Voice:</strong> Grounding brand tone across multi-language marketing teams (Spanish, German, Japanese) using multilingual embeddings.</li>
+          <li><strong>1. Browser Extension for Google Docs & Notion:</strong> Content creators can see brand warnings right inside Google Docs, Notion, or Canva while typing.</li>
+          <li><strong>2. Two-Way Website Sync (WordPress & Webflow):</strong> For marketing teams—automatically updates live blog posts when brand rules change.</li>
+          <li><strong>3. Multi-Language Brand Voice:</strong> For global companies—ensures consistent tone across English, Spanish, French, and Japanese.</li>
+          <li><strong>4. Enterprise Single Sign-On (SSO):</strong> For large companies needing Okta, Google Workspace, and Microsoft Azure login.</li>
         </ul>
       </div>
     </div>
