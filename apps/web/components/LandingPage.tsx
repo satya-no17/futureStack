@@ -35,7 +35,10 @@ export function LandingPage({ onGetStarted }: LandingPageProps) {
       </nav>
 
       <main id="top">
-        <section className="mx-auto grid max-w-6xl gap-14 px-6 py-16 md:grid-cols-[1.05fr_.95fr] md:items-center md:py-24">
+        <section className="relative isolate overflow-hidden bg-gradient-to-br from-violet-100 via-violet-50 to-indigo-100">
+          <div aria-hidden="true" className="pointer-events-none absolute -right-24 -top-32 h-96 w-96 rounded-full bg-violet-300/35 blur-3xl" />
+          <div aria-hidden="true" className="pointer-events-none absolute -bottom-40 left-1/3 h-80 w-80 rounded-full bg-indigo-300/25 blur-3xl" />
+          <div className="relative mx-auto grid max-w-6xl gap-14 px-6 py-16 md:grid-cols-[1.05fr_.95fr] md:items-center md:py-24">
           <div className="max-w-xl space-y-7">
             <p className="text-sm font-semibold text-violet-700">Brand review before publishing</p>
             <h1 className="text-4xl font-semibold leading-tight tracking-tight text-gray-950 sm:text-5xl">
@@ -53,7 +56,7 @@ export function LandingPage({ onGetStarted }: LandingPageProps) {
             <p className="text-sm text-gray-500">Demo workspace · Sample brand data · Human approval stays in control</p>
           </div>
 
-          <div className="rounded-2xl border border-gray-200 bg-gray-50 p-5 shadow-sm sm:p-7">
+          <div className="rounded-2xl border border-violet-200 bg-white p-5 shadow-xl shadow-violet-950/10 sm:p-7">
             <div className="mb-5 flex items-start justify-between gap-4 border-b border-gray-200 pb-4">
               <div>
                 <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">Example review</p>
@@ -69,7 +72,7 @@ export function LandingPage({ onGetStarted }: LandingPageProps) {
                   <div><p className="text-sm font-semibold text-gray-900">Unverified ranking</p><p className="mt-1 text-sm leading-6 text-gray-600">No approved source supports “#1 fastest”. Remove the ranking or add evidence.</p></div>
                 </div>
               </div>
-              <div className="rounded-xl border border-violet-200 bg-violet-50/70 p-4">
+              <div className="rounded-xl border border-violet-300 bg-gradient-to-br from-violet-100 to-indigo-50 p-4">
                 <p className="text-xs font-semibold uppercase tracking-wide text-violet-800">Suggested edit · review before applying</p>
                 <p className="mt-2 text-sm leading-6 text-gray-800">“A faster way for growing teams to get work done.”</p>
                 <div className="mt-3 flex items-center gap-2 text-xs text-gray-600"><MessageSquareText className="h-3.5 w-3.5" /> You stay in control of the wording.</div>
@@ -78,6 +81,7 @@ export function LandingPage({ onGetStarted }: LandingPageProps) {
                 <ClipboardCheck className="h-4 w-4 text-violet-700" /> Findings include the reason and a path to resolve them.
               </div>
             </div>
+          </div>
           </div>
         </section>
 
