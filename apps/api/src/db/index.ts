@@ -58,6 +58,19 @@ export async function initDb(): Promise<void> {
       console.warn('[DB] Notice on ALTER TABLE reviews:', err.message);
     }
 
+    // 5. Apply Round 3 extensions migration
+    try {
+      const migrationPath = fs.existsSync(path.join(__dirname, 'migrations/002_round3_extensions.sql'))
+        ? path.join(__dirname, 'migrations/002_round3_extensions.sql')
+        : path.join(__dirname, '../../src/db/migrations/002_round3_extensions.sql');
+      if (fs.existsSync(migrationPath)) {
+        const migrationSql = fs.readFileSync(migrationPath, 'utf-8');
+        await client.query(migrationSql);
+      }
+    } catch (err: any) {
+      console.warn('[DB] Notice on Round 3 migration:', err.message);
+    }
+
     console.log('[DB] Database schema and pgvector initialized successfully.');
   } finally {
     client.release();

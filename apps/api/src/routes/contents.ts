@@ -9,6 +9,17 @@ import { logAudit } from '../services/audit';
 
 const router = Router();
 
+const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+// Validate UUID parameter to prevent Postgres 22P02 invalid input syntax crashes
+router.param('id', (req, res, next, id) => {
+  if (!UUID_REGEX.test(id)) {
+    res.status(404).json({ error: 'Content not found' });
+    return;
+  }
+  next();
+});
+
 const CreateContentSchema = z.object({
   title: z.string().min(1),
   channel: z.string().min(1), // 'LinkedIn', 'Twitter / X', 'Blog', 'Email', etc.
@@ -337,7 +348,7 @@ router.post('/:id/decision', authenticate, requireRole('reviewer', 'admin'), asy
   res.json({ message: `Decision recorded: ${data.decision}`, status: data.decision });
 });
 
-// 8. Publish content
+// 8. Publish content (Classic direct publish)
 router.post('/:id/publish', authenticate, requireRole('admin'), async (req: Request, res: Response) => {
   const orgId = req.user!.orgId;
   const userId = req.user!.userId;
@@ -363,6 +374,181 @@ router.post('/:id/publish', authenticate, requireRole('admin'), async (req: Requ
   await logAudit(orgId, userId, 'publish_content', 'content', id, {});
 
   res.json({ message: 'Content published and locked', status: 'published' });
+});
+
+// 9. Social Preview (Zero-API: generates instant web intent links and formatted context)
+router.get('/:id/social-preview', authenticate, async (req: Request, res: Response) => {
+  const orgId = req.user!.orgId;
+  const id = req.params.id as string;
+  const includeWatermark = req.query.watermark === 'true';
+
+  const content = await queryOne<{
+    id: string;
+    title: string;
+    status: string;
+    latest_score: number;
+    current_version_id: string;
+  }>(
+    `SELECT id, title, status, latest_score, current_version_id FROM contents WHERE id = $1 AND organization_id = $2`,
+    [id, orgId]
+  );
+
+  if (!content) {
+    res.status(404).json({ error: 'Content not found' });
+    return;
+  }
+
+  const version = await queryOne<{ body: string }>(
+    `SELECT body FROM content_versions WHERE id = $1`,
+    [content.current_version_id]
+  );
+
+  const { getSocialPreviews } = await import('../services/publishers/socialPublisher');
+  const previews = getSocialPreviews(
+    content.title,
+    version?.body || '',
+    content.latest_score,
+    includeWatermark
+  );
+
+  res.json({
+    contentId: content.id,
+    title: content.title,
+    score: content.latest_score,
+    status: content.status,
+    previews
+  });
+});
+
+// 10. Social Publish (Zero-API Share Intent, Clipboard Context, or Minimal-API Webhook)
+router.post('/:id/social-publish', authenticate, async (req: Request, res: Response) => {
+  const orgId = req.user!.orgId;
+  const userId = req.user!.userId;
+  const userRole = req.user!.role;
+  const id = req.params.id as string;
+
+  const { channel, method, webhookUrl, includeWatermark, targetUrl } = req.body;
+
+  if (!channel || !method) {
+    res.status(400).json({ error: 'Channel and method are required' });
+    return;
+  }
+
+  const content = await queryOne<{
+    id: string;
+    title: string;
+    channel: string;
+    status: string;
+    latest_score: number;
+    current_version_id: string;
+  }>(
+    `SELECT id, title, channel, status, latest_score, current_version_id FROM contents WHERE id = $1 AND organization_id = $2`,
+    [id, orgId]
+  );
+
+  if (!content) {
+    res.status(404).json({ error: 'Content not found' });
+    return;
+  }
+
+  // Permissions: Admin can publish approved; Solo user can publish anytime; Creator can publish if approved
+  if (content.status !== 'approved' && userRole !== 'solo') {
+    res.status(400).json({ error: 'Content must be approved before publishing to social channels' });
+    return;
+  }
+
+  const version = await queryOne<{ body: string }>(
+    `SELECT body FROM content_versions WHERE id = $1`,
+    [content.current_version_id]
+  );
+
+  const {
+    formatSocialText,
+    generateSocialIntentUrl,
+    dispatchUniversalWebhook
+  } = await import('../services/publishers/socialPublisher');
+
+  const { formattedText, watermark } = formatSocialText(
+    version?.body || '',
+    channel,
+    content.latest_score,
+    !!includeWatermark
+  );
+
+  const intentUrl = generateSocialIntentUrl(channel, content.title, formattedText, targetUrl);
+
+  let webhookResult: any = null;
+  if (method === 'webhook') {
+    if (!webhookUrl) {
+      res.status(400).json({ error: 'webhookUrl is required for webhook publishing' });
+      return;
+    }
+
+    const org = await queryOne<{ name: string }>(`SELECT name FROM organizations WHERE id = $1`, [orgId]);
+    webhookResult = await dispatchUniversalWebhook(webhookUrl, {
+      contentId: content.id,
+      title: content.title,
+      body: formattedText,
+      channel,
+      score: content.latest_score,
+      publishedBy: req.user!.email,
+      organizationName: org?.name
+    });
+
+    if (!webhookResult.success) {
+      res.status(502).json({
+        error: 'Failed to deliver to webhook',
+        details: webhookResult.responseText
+      });
+      return;
+    }
+  }
+
+  // Lock status to 'published'
+  await query(`UPDATE contents SET status = 'published' WHERE id = $1`, [id]);
+
+  // Insert publishing record
+  const record = await queryOne<{ id: string; created_at: string }>(
+    `INSERT INTO publishing_records (
+      organization_id, content_id, version_id, published_by,
+      channel, method, destination_url, payload_snapshot, status
+    ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, 'published')
+    RETURNING id, created_at`,
+    [
+      orgId,
+      id,
+      content.current_version_id,
+      userId,
+      channel,
+      method,
+      method === 'webhook' ? webhookUrl : intentUrl,
+      JSON.stringify({
+        formattedText,
+        characterCount: formattedText.length,
+        score: content.latest_score,
+        watermark,
+        webhookResult
+      })
+    ]
+  );
+
+  // Tamper-evident Audit Log
+  await logAudit(orgId, userId, 'social_publish', 'content', id, {
+    channel,
+    method,
+    destination: method === 'webhook' ? webhookUrl : intentUrl,
+    recordId: record?.id,
+    complianceScore: content.latest_score
+  });
+
+  res.json({
+    message: `Successfully published to ${channel}`,
+    status: 'published',
+    intentUrl,
+    formattedText,
+    characterCount: formattedText.length,
+    recordId: record?.id
+  });
 });
 
 export default router;

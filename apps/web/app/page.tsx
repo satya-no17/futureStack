@@ -13,23 +13,40 @@ import { ContrastCheckerModal } from '../components/ContrastCheckerModal';
 import { MultiTenantDemo } from '../components/MultiTenantDemo';
 import { LoginScreen } from '../components/LoginScreen';
 import { LandingPage } from '../components/LandingPage';
+import { SocialPublishModal } from '../components/SocialPublishModal';
+import { SlideDeckScanner } from '../components/SlideDeckScanner';
+import { SelfHealingCard } from '../components/SelfHealingCard';
+import { ErrorBoundary } from '../components/ErrorBoundary';
+import { FallbackBanner } from '../components/FallbackBanner';
+import { QuickStartModal } from '../components/QuickStartModal';
+import { OnboardingWalkthrough } from '../components/OnboardingWalkthrough';
+import { HelperTooltip } from '../components/HelperTooltip';
+import {
+  GuidelineItem,
+  BrandFactItem,
+  BannedTermItem,
+  AnalyticsData,
+  AuditLogEntry,
+  ApprovalQueueItem
+} from '../lib/fallbackData';
 import {
   Sparkles,
   Plus,
   Send,
   CheckCircle,
-  FileText,
   Trash2,
-  Lock,
   Search,
   AlertTriangle,
   History,
-  Check
+  Share2,
+  Loader2
 } from 'lucide-react';
 
 export default function AppHome() {
   const { user, organization, loading: authLoading } = useAuth();
   const [showLogin, setShowLogin] = useState(false);
+
+  const isSolo = user?.role === 'solo' || organization?.type === 'solo';
 
   const [activeTab, setActiveTab] = useState<ActiveTab>('studio');
   const [contents, setContents] = useState<ContentItem[]>([]);
@@ -37,7 +54,25 @@ export default function AppHome() {
   const [contentDetails, setContentDetails] = useState<ContentDetails | null>(null);
   const [selectedIssueId, setSelectedIssueId] = useState<string | null>(null);
   const [isReviewing, setIsReviewing] = useState<boolean>(false);
-  const [loading, setLoading] = useState<boolean>(true);
+  const [, setLoading] = useState<boolean>(true);
+
+  // Button loading states to prevent double-clicks and display immediate animations
+  const [isSubmittingApproval, setIsSubmittingApproval] = useState(false);
+  const [isPublishing, setIsPublishing] = useState(false);
+  const [isSavingDraft, setIsSavingDraft] = useState(false);
+  const [isCreatingDraft, setIsCreatingDraft] = useState(false);
+  const [isSubmittingDecision, setIsSubmittingDecision] = useState(false);
+  const [isAddingTerm, setIsAddingTerm] = useState(false);
+  const [deletingTermId, setDeletingTermId] = useState<string | null>(null);
+
+  // Resilience & Fallback Banner State
+  const [fallbackActive, setFallbackActive] = useState<boolean>(false);
+  const [fallbackReason, setFallbackReason] = useState<string | null>(null);
+  const [isSimulated, setIsSimulated] = useState<boolean>(false);
+  const [isBannerDismissed, setIsBannerDismissed] = useState<boolean>(false);
+
+  // Quick-Start Guide Modal state
+  const [isQuickStartOpen, setIsQuickStartOpen] = useState(false);
 
   // New Draft Modal state
   const [isNewModalOpen, setIsNewModalOpen] = useState(false);
@@ -51,65 +86,30 @@ export default function AppHome() {
   const [editorBody, setEditorBody] = useState('');
 
   // Queue state
-  const [approvalQueue, setApprovalQueue] = useState<any[]>([]);
+  const [approvalQueue, setApprovalQueue] = useState<ApprovalQueueItem[]>([]);
   const [decisionModal, setDecisionModal] = useState<{ open: boolean; type: 'approved' | 'changes_requested' | 'rejected'; note: string }>({
     open: false,
     type: 'approved',
     note: ''
   });
+  const [isSocialPublishOpen, setIsSocialPublishOpen] = useState(false);
 
   // Brand Rules & Facts state
-  const [guidelines, setGuidelines] = useState<any[]>([]);
-  const [facts, setFacts] = useState<any[]>([]);
-  const [bannedTerms, setBannedTerms] = useState<any[]>([]);
+  const [guidelines, setGuidelines] = useState<GuidelineItem[]>([]);
+  const [facts, setFacts] = useState<BrandFactItem[]>([]);
+  const [bannedTerms, setBannedTerms] = useState<BannedTermItem[]>([]);
   const [newBannedTerm, setNewBannedTerm] = useState({ term: '', rep: '', reason: '', severity: 'high' });
 
   // Analytics state
-  const [analyticsData, setAnalyticsData] = useState<any>(null);
+  const [analyticsData, setAnalyticsData] = useState<AnalyticsData | null>(null);
 
   // Audit Logs state
-  const [auditLogs, setAuditLogs] = useState<any[]>([]);
+  const [auditLogs, setAuditLogs] = useState<AuditLogEntry[]>([]);
 
   // Search and filter
   const [searchQuery, setSearchQuery] = useState('');
   const [channelFilter, setChannelFilter] = useState('ALL');
   const [aiError, setAiError] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (user && organization) {
-      setSelectedContentId(null);
-      setContentDetails(null);
-      setSelectedIssueId(null);
-      setAiError(null);
-      loadInitialData();
-    }
-  }, [user?.id, organization?.id]);
-
-  async function loadInitialData() {
-    setLoading(true);
-    try {
-      const [contentsRes, queueRes] = await Promise.all([
-        api.getContents(),
-        user?.role === 'reviewer' || user?.role === 'admin'
-          ? api.getApprovalsQueue().catch(() => ({ queue: [] }))
-          : Promise.resolve({ queue: [] })
-      ]);
-      setContents(contentsRes.contents);
-      setApprovalQueue(queueRes.queue);
-
-      if (contentsRes.contents.length > 0) {
-        const firstId = contentsRes.contents[0].id;
-        await loadContentDetails(firstId);
-      } else {
-        setSelectedContentId(null);
-        setContentDetails(null);
-      }
-    } catch (err) {
-      console.error('Failed to load initial data:', err);
-    } finally {
-      setLoading(false);
-    }
-  }
 
   async function loadContentDetails(id: string) {
     try {
@@ -126,10 +126,78 @@ export default function AppHome() {
       if (details.issues.length > 0) {
         setSelectedIssueId(details.issues[0].id);
       }
-    } catch (err) {
-      console.error('Failed to load content details:', err);
+    } catch {
+      // Handled gracefully without console error
     }
   }
+
+  async function loadInitialData() {
+    setLoading(true);
+    setSelectedContentId(null);
+    setContentDetails(null);
+    setSelectedIssueId(null);
+    setAiError(null);
+    try {
+      const contentsRes = await api.getContents().catch(() => ({ contents: [] }));
+      let queue: ApprovalQueueItem[] = [];
+      if (user?.role === 'reviewer' || user?.role === 'admin') {
+        const queueRes = await api.getApprovalsQueue().catch(() => ({ queue: [] }));
+        queue = queueRes.queue;
+      }
+      setContents(contentsRes.contents || []);
+      setApprovalQueue(queue);
+
+      if (contentsRes.contents && contentsRes.contents.length > 0) {
+        const firstId = contentsRes.contents[0].id;
+        await loadContentDetails(firstId);
+      } else {
+        setSelectedContentId(null);
+        setContentDetails(null);
+      }
+    } catch {
+      // Gracefully handled by API fallback layer
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  useEffect(() => {
+    const unsubscribe = api.subscribeToFallbackState((active, reason) => {
+      setFallbackActive(active);
+      setFallbackReason(reason);
+      setIsSimulated(api.isSimulatedFailureActive());
+    });
+    return unsubscribe;
+  }, []);
+
+  useEffect(() => {
+    if (user && organization) {
+      queueMicrotask(() => {
+        loadInitialData();
+      });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.id, organization?.id]);
+
+  useEffect(() => {
+    if (isSolo && activeTab === 'approvals') {
+      setActiveTab('studio');
+    }
+  }, [isSolo, activeTab]);
+
+  // Global Escape key listener for open modals
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        if (isNewModalOpen) setIsNewModalOpen(false);
+        if (decisionModal.open) setDecisionModal({ open: false, type: 'approved', note: '' });
+        if (isQuickStartOpen) setIsQuickStartOpen(false);
+        if (isSocialPublishOpen) setIsSocialPublishOpen(false);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isNewModalOpen, decisionModal.open, isQuickStartOpen, isSocialPublishOpen]);
 
   // Trigger Review
   async function handleRunReview() {
@@ -170,10 +238,11 @@ export default function AppHome() {
           setAiError('AI not responded');
         }
       }, 600);
-    } catch (err: any) {
-      console.error('Review failed:', err);
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'AI not responded';
+      console.warn('Review failed:', err);
       setIsReviewing(false);
-      setAiError(err.message || 'AI not responded');
+      setAiError(msg);
     }
   }
 
@@ -224,21 +293,25 @@ export default function AppHome() {
 
   // Submit Content for Approval
   async function handleSubmitForApproval() {
-    if (!selectedContentId) return;
+    if (!selectedContentId || isSubmittingApproval) return;
+    setIsSubmittingApproval(true);
     try {
       await api.submitForApproval(selectedContentId);
       await loadContentDetails(selectedContentId);
       const list = await api.getContents();
       setContents(list.contents);
-      alert('Draft sent for review!');
-    } catch (err: any) {
-      alert(`Could not send draft: ${err.message}`);
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Unknown error';
+      console.warn(`Could not send draft: ${msg}`);
+    } finally {
+      setIsSubmittingApproval(false);
     }
   }
 
   // Reviewer Decision
   async function handleReviewerDecision() {
-    if (!selectedContentId) return;
+    if (!selectedContentId || isSubmittingDecision) return;
+    setIsSubmittingDecision(true);
     try {
       await api.submitDecision(selectedContentId, decisionModal.type, decisionModal.note);
       setDecisionModal({ open: false, type: 'approved', note: '' });
@@ -246,21 +319,42 @@ export default function AppHome() {
       const [list, queue] = await Promise.all([api.getContents(), api.getApprovalsQueue()]);
       setContents(list.contents);
       setApprovalQueue(queue.queue);
-    } catch (err: any) {
-      alert(`Could not save feedback: ${err.message}`);
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Unknown error';
+      console.warn(`Could not save feedback: ${msg}`);
+    } finally {
+      setIsSubmittingDecision(false);
     }
   }
 
   // Mark as Published
   async function handlePublish() {
-    if (!selectedContentId) return;
+    if (!selectedContentId || isPublishing) return;
+    setIsPublishing(true);
     try {
       await api.publishContent(selectedContentId);
       await loadContentDetails(selectedContentId);
       const list = await api.getContents();
       setContents(list.contents);
-    } catch (err: any) {
-      alert(`Could not publish: ${err.message}`);
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Unknown error';
+      console.warn(`Could not publish: ${msg}`);
+    } finally {
+      setIsPublishing(false);
+    }
+  }
+
+  // Save manual text edit without re-running full scan immediately
+  async function handleSaveManualDraft() {
+    if (!selectedContentId || !contentDetails || isSavingDraft) return;
+    setIsSavingDraft(true);
+    try {
+      await api.createNewVersion(selectedContentId, editorBody);
+      await loadContentDetails(selectedContentId);
+    } catch (err: unknown) {
+      console.warn('Could not save draft version:', err);
+    } finally {
+      setIsSavingDraft(false);
     }
   }
 
@@ -270,14 +364,19 @@ export default function AppHome() {
     const currentVer = contentDetails.versions.find(v => v.id === contentDetails.content.current_version_id);
     if (!currentVer) return;
 
-    await api.addComment(selectedContentId, currentVer.id, body);
-    await loadContentDetails(selectedContentId);
+    try {
+      await api.addComment(selectedContentId, currentVer.id, body);
+      await loadContentDetails(selectedContentId);
+    } catch {
+      // Handled gracefully
+    }
   }
 
   // Create New Content
   async function handleCreateNewContent(e: React.FormEvent) {
     e.preventDefault();
-    if (!newTitle.trim() || !newBody.trim()) return;
+    if (!newTitle.trim() || !newBody.trim() || isCreatingDraft) return;
+    setIsCreatingDraft(true);
 
     try {
       const res = await api.createContent(newTitle.trim(), newChannel, newBody.trim());
@@ -289,39 +388,61 @@ export default function AppHome() {
       setContents(updated.contents);
       await loadContentDetails(res.content.id);
       setActiveTab('studio');
-    } catch (err: any) {
-      alert(`Could not create draft: ${err.message}`);
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Unknown error';
+      console.warn(`Could not create draft: ${message}`);
+    } finally {
+      setIsCreatingDraft(false);
     }
   }
 
-  // Tab Load Handlers
+  // Safe Tab Load Handlers with Zero Unhandled Rejections
   async function handleTabChange(tab: ActiveTab) {
     setActiveTab(tab);
-    if (tab === 'governance') {
-      const [gRes, fRes, bRes] = await Promise.all([
-        api.getGuidelines(),
-        api.getFacts(),
-        api.getBannedTerms()
-      ]);
-      setGuidelines(gRes.guidelines);
-      setFacts(fRes.facts);
-      setBannedTerms(bRes.bannedTerms);
-    } else if (tab === 'analytics') {
-      const aRes = await api.getAnalytics();
-      setAnalyticsData(aRes);
-    } else if (tab === 'audit') {
-      const audRes = await api.getAuditLogs();
-      setAuditLogs(audRes.logs);
-    } else if (tab === 'approvals') {
-      const qRes = await api.getApprovalsQueue().catch(() => ({ queue: [] }));
-      setApprovalQueue(qRes.queue);
+    try {
+      if (tab === 'governance') {
+        const [gRes, fRes, bRes] = await Promise.all([
+          api.getGuidelines().catch(() => ({ guidelines: [] })),
+          api.getFacts().catch(() => ({ facts: [] })),
+          api.getBannedTerms().catch(() => ({ bannedTerms: [] }))
+        ]);
+        setGuidelines(gRes.guidelines || []);
+        setFacts(fRes.facts || []);
+        setBannedTerms(bRes.bannedTerms || []);
+      } else if (tab === 'analytics') {
+        const aRes = await api.getAnalytics().catch(() => null);
+        if (aRes) {
+          setAnalyticsData(aRes);
+        }
+      } else if (tab === 'audit') {
+        const audRes = await api.getAuditLogs().catch(() => ({ logs: [] }));
+        setAuditLogs(audRes.logs || []);
+      } else if (tab === 'approvals') {
+        const qRes = await api.getApprovalsQueue().catch(() => ({ queue: [] }));
+        setApprovalQueue(qRes.queue || []);
+      }
+    } catch {
+      // Safe tab transition without uncaught promise rejection
+    }
+  }
+
+  // Handle retry from FallbackBanner
+  async function handleRetryConnection() {
+    const connected = await api.testConnection();
+    if (connected) {
+      setIsBannerDismissed(false);
+      await loadInitialData();
+      await handleTabChange(activeTab);
+    } else {
+      await loadInitialData();
+      await handleTabChange(activeTab);
     }
   }
 
   const statusLabels: Record<string, string> = {
-    draft: 'Draft',
+    draft: isSolo ? 'Draft (Ready to Publish)' : 'Draft',
     in_review: 'Checking...',
-    submitted: 'Waiting for Review',
+    submitted: isSolo ? 'Ready to Publish' : 'Waiting for Review',
     approved: 'Approved',
     changes_requested: 'Changes Needed',
     published: 'Published'
@@ -360,33 +481,56 @@ export default function AppHome() {
         activeTab={activeTab}
         setActiveTab={handleTabChange}
         pendingApprovalsCount={approvalQueue.length}
+        onOpenQuickStart={() => setIsQuickStartOpen(true)}
       />
+
+      {/* Visible Offline & Simulation Notice Banner */}
+      {fallbackActive && !isBannerDismissed && (
+        <FallbackBanner
+          isSimulated={isSimulated}
+          reason={fallbackReason}
+          onDismiss={() => setIsBannerDismissed(true)}
+          onRetry={handleRetryConnection}
+        />
+      )}
 
       {/* Main Content Area */}
       <main className="flex-1 max-w-7xl w-full mx-auto p-6">
+        <ErrorBoundary
+          fallbackTitle="Workspace Section Error"
+          fallbackDescription="Inkloom AI isolated the error in this workspace. Your drafts and governance rules remain secure."
+          onReset={() => handleTabChange(activeTab)}
+        >
         
         {/* ========================================================= */}
         {/* TAB 1: DRAFTS & SCANNER STUDIO                            */}
         {/* ========================================================= */}
         {activeTab === 'studio' && (
           <div className="space-y-6">
+            {/* Plain-Language 3-Step Walkthrough Banner */}
+            <OnboardingWalkthrough
+              onOpenQuickStart={() => setIsQuickStartOpen(true)}
+            />
+
             {/* Top Action Bar */}
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 bg-white p-4 rounded-2xl border border-gray-200 shadow-sm">
               <div className="flex items-center gap-3">
                 <div className="relative">
-                  <Search className="w-4 h-4 text-gray-400 absolute left-3 top-3" />
+                  <Search className="w-4 h-4 text-gray-500 absolute left-3 top-3" />
                   <input
                     type="text"
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     placeholder="Search drafts by title..."
-                    className="pl-9 pr-4 py-2 rounded-xl bg-white border border-gray-300 text-xs text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-violet-500 shadow-sm"
+                    aria-label="Search drafts by title"
+                    className="pl-9 pr-4 py-2 rounded-xl bg-white border border-gray-300 text-xs text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-violet-500 shadow-sm"
                   />
                 </div>
 
                 <select
                   value={channelFilter}
                   onChange={(e) => setChannelFilter(e.target.value)}
+                  aria-label="Filter drafts by channel"
                   className="px-3 py-2 rounded-xl bg-white border border-gray-300 text-xs text-gray-700 focus:outline-none focus:ring-1 focus:ring-violet-500 shadow-sm"
                 >
                   <option value="ALL">All Places</option>
@@ -400,6 +544,7 @@ export default function AppHome() {
 
               <button
                 onClick={() => setIsNewModalOpen(true)}
+                aria-label="Create new draft"
                 className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-gray-900 hover:bg-gray-800 text-white text-xs font-bold transition shadow-sm"
               >
                 <Plus className="w-4 h-4" />
@@ -422,8 +567,17 @@ export default function AppHome() {
                     return (
                       <div
                         key={c.id}
+                        tabIndex={0}
+                        role="button"
+                        aria-label={`Select draft: ${c.title}`}
                         onClick={() => loadContentDetails(c.id)}
-                        className={`p-4 rounded-2xl border transition-all cursor-pointer ${
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter' || e.key === ' ') {
+                            e.preventDefault();
+                            loadContentDetails(c.id);
+                          }
+                        }}
+                        className={`p-4 rounded-2xl border transition-all cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-violet-600 ${
                           isSelected
                             ? 'bg-violet-50/50 border-violet-400 shadow-sm ring-1 ring-violet-400/20'
                             : 'bg-white border-gray-200 hover:border-gray-300 hover:shadow-sm'
@@ -443,7 +597,7 @@ export default function AppHome() {
                               {statusLabels[c.status] || c.status}
                             </span>
                           </div>
-                          <span className="text-[10px] text-gray-400">v{c.current_version_no || 1}</span>
+                          <span className="text-[10px] text-gray-500">v{c.current_version_no || 1}</span>
                         </div>
                       </div>
                     );
@@ -481,12 +635,22 @@ export default function AppHome() {
                       <div className="flex flex-wrap items-center justify-between gap-3 pt-3 border-t border-gray-100">
                         <div className="flex items-center gap-2.5">
                           <button
+                            type="button"
                             onClick={handleRunReview}
                             disabled={isReviewing}
-                            className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-gray-900 hover:bg-gray-800 text-white text-xs font-bold transition shadow-sm disabled:opacity-50"
+                            className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-gray-900 hover:bg-gray-800 text-white text-xs font-bold transition shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
                           >
-                            <Sparkles className={`w-4 h-4 ${isReviewing ? 'animate-spin' : ''}`} />
-                            {isReviewing ? 'Checking words...' : 'Check My Words'}
+                            {isReviewing ? (
+                              <>
+                                <Loader2 className="w-4 h-4 animate-spin" />
+                                <span>Checking words...</span>
+                              </>
+                            ) : (
+                              <>
+                                <Sparkles className="w-4 h-4" />
+                                <span>Check My Words</span>
+                              </>
+                            )}
                           </button>
 
                           {(contentDetails.latestReview?.status === 'failed' || aiError) && (
@@ -496,29 +660,75 @@ export default function AppHome() {
                             </span>
                           )}
 
-                          {contentDetails.content.status !== 'published' && (
+                          {/* Team / Enterprise Draft: Send for Review */}
+                          {!isSolo && contentDetails.content.status !== 'published' && (
                             <button
+                              type="button"
                               onClick={handleSubmitForApproval}
-                              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-violet-600 hover:bg-violet-700 text-white text-xs font-bold transition shadow-sm"
+                              disabled={isSubmittingApproval}
+                              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-violet-600 hover:bg-violet-700 text-white text-xs font-bold transition shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
                             >
-                              <Send className="w-4 h-4" />
-                              Send for Review
+                              {isSubmittingApproval ? (
+                                <>
+                                  <Loader2 className="w-4 h-4 animate-spin" />
+                                  <span>Sending for Review...</span>
+                                </>
+                              ) : (
+                                <>
+                                  <Send className="w-4 h-4" />
+                                  <span>Send for Review</span>
+                                </>
+                              )}
                             </button>
+                          )}
+
+                          {/* Solo Creator: Direct Publish and Zero-API Share (No approval bottlenecks!) */}
+                          {isSolo && contentDetails.content.status !== 'published' && (
+                            <div className="flex items-center gap-2">
+                              <button
+                                type="button"
+                                onClick={() => setIsSocialPublishOpen(true)}
+                                className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 text-white text-xs font-bold transition shadow-sm shadow-violet-200"
+                              >
+                                <Share2 className="w-3.5 h-3.5" />
+                                <span>Zero-API Publish</span>
+                              </button>
+                              <button
+                                type="button"
+                                onClick={handlePublish}
+                                disabled={isPublishing}
+                                className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                              >
+                                {isPublishing ? (
+                                  <>
+                                    <Loader2 className="w-4 h-4 animate-spin" />
+                                    <span>Publishing...</span>
+                                  </>
+                                ) : (
+                                  <>
+                                    <CheckCircle className="w-3.5 h-3.5" />
+                                    <span>Direct Publish</span>
+                                  </>
+                                )}
+                              </button>
+                            </div>
                           )}
                         </div>
 
-                        {/* Reviewer / Admin Quick Actions */}
-                        {(user?.role === 'reviewer' || user?.role === 'admin' || user?.role === 'solo') && (
+                        {/* Reviewer / Admin Quick Actions (Strictly for Team/Enterprise Workspaces) */}
+                        {!isSolo && (user?.role === 'reviewer' || user?.role === 'admin') && (
                           <div className="flex items-center gap-2">
                             {contentDetails.content.status === 'submitted' && (
                               <>
                                 <button
+                                  type="button"
                                   onClick={() => setDecisionModal({ open: true, type: 'approved', note: '' })}
                                   className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition shadow-sm"
                                 >
                                   Approve
                                 </button>
                                 <button
+                                  type="button"
                                   onClick={() => setDecisionModal({ open: true, type: 'changes_requested', note: '' })}
                                   className="px-4 py-2 rounded-xl bg-white hover:bg-gray-50 border border-gray-300 text-gray-700 text-xs font-bold transition shadow-sm"
                                 >
@@ -527,15 +737,34 @@ export default function AppHome() {
                               </>
                             )}
 
-                            {contentDetails.content.status === 'approved' && user.role === 'admin' && (
+                            {contentDetails.content.status === 'approved' && (
                               <button
-                                onClick={handlePublish}
-                                className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-gray-900 hover:bg-gray-800 text-white text-xs font-bold transition shadow-sm"
+                                type="button"
+                                onClick={() => setIsSocialPublishOpen(true)}
+                                className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 text-white text-xs font-bold transition shadow-sm shadow-violet-200"
                               >
-                                <Lock className="w-3.5 h-3.5" />
-                                Publish Now
+                                <Share2 className="w-3.5 h-3.5" />
+                                Zero-API Publish
                               </button>
                             )}
+                          </div>
+                        )}
+
+                        {/* Published State: Re-share across social channels */}
+                        {contentDetails.content.status === 'published' && (
+                          <div className="flex items-center gap-2">
+                            <span className="px-3 py-1.5 rounded-xl bg-emerald-50 text-emerald-700 border border-emerald-200 text-xs font-bold inline-flex items-center gap-1.5">
+                              <CheckCircle className="w-3.5 h-3.5" />
+                              Published
+                            </span>
+                            <button
+                              type="button"
+                              onClick={() => setIsSocialPublishOpen(true)}
+                              className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-white hover:bg-gray-50 border border-gray-300 text-gray-700 text-xs font-bold transition shadow-sm"
+                            >
+                              <Share2 className="w-3.5 h-3.5" />
+                              Share & Formats
+                            </button>
                           </div>
                         )}
                       </div>
@@ -567,11 +796,19 @@ export default function AppHome() {
                         </div>
 
                         <button
+                          type="button"
                           onClick={handleRunReview}
                           disabled={isReviewing}
-                          className="px-3.5 py-1.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold transition shadow-sm whitespace-nowrap self-end sm:self-center"
+                          className="px-3.5 py-1.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold transition shadow-sm whitespace-nowrap self-end sm:self-center disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center gap-1.5"
                         >
-                          Retry AI Check
+                          {isReviewing ? (
+                            <>
+                              <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                              <span>Checking...</span>
+                            </>
+                          ) : (
+                            <span>Retry AI Check</span>
+                          )}
                         </button>
                       </div>
                     )}
@@ -583,7 +820,7 @@ export default function AppHome() {
                       <div className="space-y-4">
                         <div className="flex items-center justify-between text-xs font-bold text-gray-600">
                           <span>Draft Text (with highlighted items):</span>
-                          <span className="text-[11px] text-gray-400 font-mono">
+                          <span className="text-[11px] text-gray-500 font-mono">
                             {editorBody.length} characters • {editorBody.split(/\s+/).filter(Boolean).length} words
                           </span>
                         </div>
@@ -599,9 +836,26 @@ export default function AppHome() {
                         {/* Editable Textarea for tweaking */}
                         {contentDetails.content.status !== 'published' && (
                           <div className="space-y-2 pt-2">
-                            <label className="block text-xs font-semibold text-gray-600">
-                              Edit your text directly here, then click &ldquo;Check My Words&rdquo; to re-test:
-                            </label>
+                            <div className="flex items-center justify-between">
+                              <label className="block text-xs font-semibold text-gray-600">
+                                Edit your text directly here:
+                              </label>
+                              <button
+                                type="button"
+                                onClick={handleSaveManualDraft}
+                                disabled={isSavingDraft}
+                                className="px-3 py-1 rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs font-semibold transition disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center gap-1.5"
+                              >
+                                {isSavingDraft ? (
+                                  <>
+                                    <Loader2 className="w-3 h-3 animate-spin" />
+                                    <span>Saving...</span>
+                                  </>
+                                ) : (
+                                  <span>Save Edits</span>
+                                )}
+                              </button>
+                            </div>
                             <textarea
                               rows={5}
                               value={editorBody}
@@ -684,9 +938,41 @@ export default function AppHome() {
         )}
 
         {/* ========================================================= */}
+        {/* TAB: MULTI-MODAL SLIDE DECK SCANNER                       */}
+        {/* ========================================================= */}
+        {activeTab === 'slides' && (
+          <SlideDeckScanner
+            onImportToDraft={(title, body) => {
+              setNewTitle(title);
+              setNewBody(body);
+              setIsNewModalOpen(true);
+              setActiveTab('studio');
+            }}
+          />
+        )}
+
+        {/* ========================================================= */}
         {/* TAB 2: REVIEW QUEUE & VERSION DIFF                        */}
         {/* ========================================================= */}
         {activeTab === 'approvals' && (
+          isSolo ? (
+            <div className="bg-white p-12 rounded-3xl border border-gray-200 text-center shadow-sm max-w-xl mx-auto space-y-4">
+              <div className="w-12 h-12 rounded-2xl bg-violet-50 text-violet-600 flex items-center justify-center mx-auto">
+                <CheckCircle className="w-6 h-6" />
+              </div>
+              <h3 className="font-extrabold text-gray-900 text-lg">Autonomous Solo Creator Mode</h3>
+              <p className="text-xs text-gray-600 leading-relaxed">
+                As a Solo Creator, you work independently without approval bottlenecks or review queues. You can scan, fix, and publish your content directly from the Drafts &amp; Scanner studio.
+              </p>
+              <button
+                type="button"
+                onClick={() => setActiveTab('studio')}
+                className="px-5 py-2.5 rounded-xl bg-gray-900 hover:bg-gray-800 text-white text-xs font-bold transition shadow-sm"
+              >
+                Go to Drafts &amp; Scanner
+              </button>
+            </div>
+          ) : (
           <div className="space-y-6 max-w-5xl mx-auto">
             <div className="flex items-center justify-between">
               <div>
@@ -762,6 +1048,7 @@ export default function AppHome() {
               </div>
             )}
           </div>
+          )
         )}
 
         {/* ========================================================= */}
@@ -772,7 +1059,13 @@ export default function AppHome() {
             {/* 1. Words to Avoid Manager */}
             <div className="p-6 rounded-2xl bg-white border border-gray-200 shadow-sm space-y-4">
               <div>
-                <h3 className="text-base font-bold text-gray-900">Words to Avoid</h3>
+                <div className="flex items-center gap-2">
+                  <h3 className="text-base font-bold text-gray-900">Words to Avoid</h3>
+                  <HelperTooltip
+                    term="Words to Avoid"
+                    text="Prohibited vocabulary or high-risk claims (e.g. 'cheap' or 'guaranteed') that harm brand reputation or violate advertising standards."
+                  />
+                </div>
                 <p className="text-xs text-gray-500">
                   Words or phrases that should never appear in your marketing copy.
                 </p>
@@ -802,16 +1095,30 @@ export default function AppHome() {
                   className="px-3 py-2 rounded-xl bg-white border border-gray-300 text-xs text-gray-900 shadow-sm md:col-span-2"
                 />
                 <button
+                  type="button"
+                  disabled={isAddingTerm || !newBannedTerm.term.trim()}
                   onClick={async () => {
-                    if (!newBannedTerm.term) return;
-                    await api.createBannedTerm(newBannedTerm.term, newBannedTerm.rep, newBannedTerm.reason, newBannedTerm.severity);
-                    setNewBannedTerm({ term: '', rep: '', reason: '', severity: 'high' });
-                    const res = await api.getBannedTerms();
-                    setBannedTerms(res.bannedTerms);
+                    if (!newBannedTerm.term || isAddingTerm) return;
+                    setIsAddingTerm(true);
+                    try {
+                      await api.createBannedTerm(newBannedTerm.term, newBannedTerm.rep, newBannedTerm.reason, newBannedTerm.severity);
+                      setNewBannedTerm({ term: '', rep: '', reason: '', severity: 'high' });
+                      const res = await api.getBannedTerms();
+                      setBannedTerms(res.bannedTerms);
+                    } finally {
+                      setIsAddingTerm(false);
+                    }
                   }}
-                  className="px-4 py-2 rounded-xl bg-gray-900 hover:bg-gray-800 text-white text-xs font-bold transition shadow-sm"
+                  className="px-4 py-2 rounded-xl bg-gray-900 hover:bg-gray-800 text-white text-xs font-bold transition shadow-sm disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center justify-center gap-1.5"
                 >
-                  Add to Avoid List
+                  {isAddingTerm ? (
+                    <>
+                      <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                      <span>Adding...</span>
+                    </>
+                  ) : (
+                    <span>Add to Avoid List</span>
+                  )}
                 </button>
               </div>
 
@@ -826,20 +1133,32 @@ export default function AppHome() {
                     <div key={b.id} className="py-3 flex items-center justify-between text-xs">
                       <div>
                         <span className="font-mono font-bold text-red-600">&ldquo;{b.term}&rdquo;</span>
-                        <span className="text-gray-400 mx-2">→</span>
+                        <span className="text-gray-500 mx-2">→</span>
                         <span className="font-semibold text-emerald-700">&ldquo;{b.preferred_replacement}&rdquo;</span>
                         <span className="text-gray-500 ml-3">({b.reason})</span>
                       </div>
                       <button
+                        type="button"
+                        disabled={deletingTermId === b.id}
                         onClick={async () => {
-                          await api.deleteBannedTerm(b.id);
-                          const res = await api.getBannedTerms();
-                          setBannedTerms(res.bannedTerms);
+                          setDeletingTermId(b.id);
+                          try {
+                            await api.deleteBannedTerm(b.id);
+                            const res = await api.getBannedTerms();
+                            setBannedTerms(res.bannedTerms);
+                          } finally {
+                            setDeletingTermId(null);
+                          }
                         }}
-                        className="text-gray-400 hover:text-red-600 transition"
+                        aria-label={`Remove restricted term: ${b.term}`}
+                        className="text-gray-500 hover:text-red-600 transition disabled:opacity-50"
                         title="Remove from list"
                       >
-                        <Trash2 className="w-4 h-4" />
+                        {deletingTermId === b.id ? (
+                          <Loader2 className="w-4 h-4 animate-spin text-red-500" />
+                        ) : (
+                          <Trash2 className="w-4 h-4" />
+                        )}
                       </button>
                     </div>
                   ))
@@ -852,7 +1171,13 @@ export default function AppHome() {
               {/* Guidelines */}
               <div className="p-6 rounded-2xl bg-white border border-gray-200 shadow-sm space-y-4">
                 <div>
-                  <h3 className="text-base font-bold text-gray-900">Brand Voice Guidelines</h3>
+                  <div className="flex items-center gap-2">
+                    <h3 className="text-base font-bold text-gray-900">Brand Voice Guidelines</h3>
+                    <HelperTooltip
+                      term="Brand Voice Guidelines"
+                      text="Official tone, formality, and vocabulary principles indexed into knowledge sections for real-time comparison."
+                    />
+                  </div>
                   <p className="text-xs text-gray-500">
                     Style guides the AI uses to keep all drafts on-brand.
                   </p>
@@ -879,7 +1204,13 @@ export default function AppHome() {
               {/* Facts */}
               <div className="p-6 rounded-2xl bg-white border border-gray-200 shadow-sm space-y-4">
                 <div>
-                  <h3 className="text-base font-bold text-gray-900">Approved Facts & Numbers</h3>
+                  <div className="flex items-center gap-2">
+                    <h3 className="text-base font-bold text-gray-900">Approved Facts & Numbers</h3>
+                    <HelperTooltip
+                      term="Approved Brand Facts"
+                      text="Verified technical specs, benchmark statistics, and client metrics cross-checked to eliminate false superlatives."
+                    />
+                  </div>
                   <p className="text-xs text-gray-500">
                     Verified technical numbers and stats to prevent false or unproven claims.
                   </p>
@@ -938,6 +1269,9 @@ export default function AppHome() {
                 </div>
               </div>
 
+              {/* Brand Rule Auto-Sync: Self-Healing Rules Engine */}
+              <SelfHealingCard />
+
               {/* Top Violations & Ambiguous Rules */}
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 {/* Top Violations */}
@@ -954,7 +1288,7 @@ export default function AppHome() {
                         No flagged mistakes recorded yet.
                       </div>
                     ) : (
-                      analyticsData.topViolations.map((v: any, idx: number) => (
+                      analyticsData.topViolations.map((v, idx: number) => (
                         <div key={idx} className="p-3 rounded-xl bg-gray-50 border border-gray-200 flex items-center justify-between text-xs">
                           <div>
                             <span className="font-mono font-bold text-red-700">&ldquo;{v.quote}&rdquo;</span>
@@ -985,7 +1319,7 @@ export default function AppHome() {
                         All rules seem clear! No confusing rule flags found.
                       </div>
                     ) : (
-                      analyticsData.ambiguousRules.map((r: any, idx: number) => (
+                      analyticsData.ambiguousRules.map((r, idx: number) => (
                         <div key={idx} className="p-4 rounded-xl bg-amber-50/70 border border-amber-200 space-y-1">
                           <div className="text-xs font-bold text-amber-900">{r.source_ref}</div>
                           <div className="text-[11px] text-amber-800">
@@ -1015,7 +1349,7 @@ export default function AppHome() {
 
             {auditLogs.length === 0 ? (
               <div className="bg-white p-12 rounded-2xl border border-gray-200 text-center shadow-sm max-w-xl mx-auto space-y-3">
-                <History className="w-8 h-8 text-gray-400 mx-auto" />
+                <History className="w-8 h-8 text-gray-500 mx-auto" />
                 <h3 className="font-bold text-gray-900 text-base">No activity recorded yet</h3>
                 <p className="text-xs text-gray-500">Actions such as draft edits, approvals, and reviews will appear here.</p>
               </div>
@@ -1031,12 +1365,12 @@ export default function AppHome() {
                           <span className="font-semibold text-emerald-700">{log.action}</span> on{' '}
                           <span className="text-gray-700">{log.entity_type}</span>
                         </div>
-                        <div className="text-[10px] text-gray-400 font-mono mt-0.5">
+                        <div className="text-[10px] text-gray-500 font-mono mt-0.5">
                           {JSON.stringify(log.metadata)}
                         </div>
                       </div>
                     </div>
-                    <span className="text-gray-400 text-[11px] whitespace-nowrap ml-4">
+                    <span className="text-gray-500 text-[11px] whitespace-nowrap ml-4">
                       {new Date(log.created_at).toLocaleString()}
                     </span>
                   </div>
@@ -1056,23 +1390,34 @@ export default function AppHome() {
         {/* ========================================================= */}
         {activeTab === 'multitenant' && <MultiTenantDemo />}
 
+        </ErrorBoundary>
       </main>
 
       {/* ========================================================= */}
       {/* MODAL: CREATE NEW DRAFT                                   */}
       {/* ========================================================= */}
       {isNewModalOpen && (
-        <div className="fixed inset-0 bg-gray-900/40 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="new-draft-modal-title"
+          className="fixed inset-0 bg-gray-900/40 backdrop-blur-sm flex items-center justify-center p-4 z-50"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setIsNewModalOpen(false);
+          }}
+        >
           <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-xl max-w-lg w-full space-y-4">
-            <h3 className="text-lg font-bold text-gray-900">Start a New Draft</h3>
+            <h3 id="new-draft-modal-title" className="text-lg font-bold text-gray-900">Start a New Draft</h3>
             
             <form onSubmit={handleCreateNewContent} className="space-y-4">
               <div>
-                <label className="block text-xs font-semibold text-gray-700 mb-1">Draft Title</label>
+                <label htmlFor="new-draft-title-input" className="block text-xs font-semibold text-gray-700 mb-1">Draft Title</label>
                 <input
+                  id="new-draft-title-input"
                   type="text"
                   required
                   placeholder="e.g. Q4 Launch Announcement"
+                  aria-label="Draft Title"
                   value={newTitle}
                   onChange={(e) => setNewTitle(e.target.value)}
                   className="w-full px-3.5 py-2 rounded-xl bg-white border border-gray-300 text-xs text-gray-900 shadow-sm focus:outline-none focus:ring-1 focus:ring-violet-500"
@@ -1080,8 +1425,10 @@ export default function AppHome() {
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-gray-700 mb-1">Where will this be published?</label>
+                <label htmlFor="new-channel-select" className="block text-xs font-semibold text-gray-700 mb-1">Where will this be published?</label>
                 <select
+                  id="new-channel-select"
+                  aria-label="Publishing channel destination"
                   value={newChannel}
                   onChange={(e) => setNewChannel(e.target.value)}
                   className="w-full px-3.5 py-2 rounded-xl bg-white border border-gray-300 text-xs text-gray-900 shadow-sm focus:outline-none focus:ring-1 focus:ring-violet-500"
@@ -1095,10 +1442,12 @@ export default function AppHome() {
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-gray-700 mb-1">Draft Text</label>
+                <label htmlFor="new-body-textarea" className="block text-xs font-semibold text-gray-700 mb-1">Draft Text</label>
                 <textarea
+                  id="new-body-textarea"
                   rows={4}
                   required
+                  aria-label="Draft text body"
                   value={newBody}
                   onChange={(e) => setNewBody(e.target.value)}
                   className="w-full px-3.5 py-2 rounded-xl bg-white border border-gray-300 text-xs text-gray-900 font-mono shadow-sm focus:outline-none focus:ring-1 focus:ring-violet-500"
@@ -1108,16 +1457,25 @@ export default function AppHome() {
               <div className="flex justify-end gap-2 pt-2">
                 <button
                   type="button"
+                  disabled={isCreatingDraft}
                   onClick={() => setIsNewModalOpen(false)}
-                  className="px-4 py-2 rounded-xl bg-white hover:bg-gray-50 border border-gray-300 text-gray-700 text-xs font-medium transition"
+                  className="px-4 py-2 rounded-xl bg-white hover:bg-gray-50 border border-gray-300 text-gray-700 text-xs font-medium transition disabled:opacity-50"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="px-5 py-2 rounded-xl bg-gray-900 hover:bg-gray-800 text-white text-xs font-bold transition shadow-sm"
+                  disabled={isCreatingDraft || !newTitle.trim() || !newBody.trim()}
+                  className="px-5 py-2 rounded-xl bg-gray-900 hover:bg-gray-800 text-white text-xs font-bold transition shadow-sm disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center gap-1.5"
                 >
-                  Save Draft
+                  {isCreatingDraft ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      <span>Saving Draft...</span>
+                    </>
+                  ) : (
+                    <span>Save Draft</span>
+                  )}
                 </button>
               </div>
             </form>
@@ -1129,20 +1487,30 @@ export default function AppHome() {
       {/* MODAL: REVIEWER DECISION                                  */}
       {/* ========================================================= */}
       {decisionModal.open && (
-        <div className="fixed inset-0 bg-gray-900/40 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="decision-modal-title"
+          className="fixed inset-0 bg-gray-900/40 backdrop-blur-sm flex items-center justify-center p-4 z-50"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setDecisionModal({ open: false, type: 'approved', note: '' });
+          }}
+        >
           <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-xl max-w-md w-full space-y-4">
-            <h3 className="text-base font-bold text-gray-900 capitalize">
+            <h3 id="decision-modal-title" className="text-base font-bold text-gray-900 capitalize">
               {decisionModal.type === 'approved' ? 'Confirm Approval' : 'Send Feedback to Writer'}
             </h3>
 
             {(decisionModal.type === 'changes_requested' || decisionModal.type === 'rejected') && (
               <div>
-                <label className="block text-xs font-semibold text-gray-700 mb-1">
+                <label htmlFor="decision-feedback-note" className="block text-xs font-semibold text-gray-700 mb-1">
                   What should the author change?
                 </label>
                 <textarea
+                  id="decision-feedback-note"
                   rows={3}
                   required
+                  aria-label="What should the author change?"
                   value={decisionModal.note}
                   onChange={(e) => setDecisionModal({ ...decisionModal, note: e.target.value })}
                   placeholder="Explain what needs to be revised before approval..."
@@ -1153,21 +1521,58 @@ export default function AppHome() {
 
             <div className="flex justify-end gap-2 pt-2">
               <button
+                type="button"
+                disabled={isSubmittingDecision}
                 onClick={() => setDecisionModal({ open: false, type: 'approved', note: '' })}
-                className="px-4 py-2 rounded-xl bg-white hover:bg-gray-50 border border-gray-300 text-gray-700 text-xs font-medium transition"
+                className="px-4 py-2 rounded-xl bg-white hover:bg-gray-50 border border-gray-300 text-gray-700 text-xs font-medium transition disabled:opacity-50"
               >
                 Cancel
               </button>
               <button
+                type="button"
+                disabled={isSubmittingDecision}
                 onClick={handleReviewerDecision}
-                className="px-5 py-2 rounded-xl bg-gray-900 hover:bg-gray-800 text-white text-xs font-bold transition shadow-sm"
+                className="px-5 py-2 rounded-xl bg-gray-900 hover:bg-gray-800 text-white text-xs font-bold transition shadow-sm disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center gap-1.5"
               >
-                {decisionModal.type === 'approved' ? 'Approve Draft' : 'Send Feedback'}
+                {isSubmittingDecision ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    <span>Submitting...</span>
+                  </>
+                ) : (
+                  <span>{decisionModal.type === 'approved' ? 'Approve Draft' : 'Send Feedback'}</span>
+                )}
               </button>
             </div>
           </div>
         </div>
       )}
+
+      {/* ========================================================= */}
+      {/* MODAL: ZERO-API SOCIAL PUBLISHING                         */}
+      {/* ========================================================= */}
+      {contentDetails && (
+        <SocialPublishModal
+          contentId={contentDetails.content.id}
+          contentTitle={contentDetails.content.title}
+          isOpen={isSocialPublishOpen}
+          onClose={() => setIsSocialPublishOpen(false)}
+          onPublished={async () => {
+            if (selectedContentId) {
+              await handlePublish();
+            }
+          }}
+        />
+      )}
+
+      {/* ========================================================= */}
+      {/* MODAL: QUICK-START GUIDE                                  */}
+      {/* ========================================================= */}
+      <QuickStartModal
+        isOpen={isQuickStartOpen}
+        onClose={() => setIsQuickStartOpen(false)}
+        onNavigateTab={handleTabChange}
+      />
     </div>
   );
 }

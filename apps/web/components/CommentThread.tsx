@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { CommentItem } from '../lib/api';
-import { MessageSquare, Send, UserCircle } from 'lucide-react';
+import { MessageSquare, Send, UserCircle, Loader2 } from 'lucide-react';
 
 interface CommentThreadProps {
   comments: CommentItem[];
@@ -12,7 +12,6 @@ interface CommentThreadProps {
 
 export function CommentThread({
   comments,
-  currentVersionId,
   onAddComment
 }: CommentThreadProps) {
   const [newComment, setNewComment] = useState('');
@@ -63,7 +62,7 @@ export function CommentThread({
               >
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <UserCircle className="w-4 h-4 text-gray-400" />
+                    <UserCircle className="w-4 h-4 text-gray-500" />
                     <span className="text-xs font-bold text-gray-900">{c.author_name}</span>
                     <span
                       className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${
@@ -75,7 +74,7 @@ export function CommentThread({
                       {roleLabels[c.author_role] || c.author_role}
                     </span>
                   </div>
-                  <span className="text-[11px] text-gray-400">
+                  <span className="text-[11px] text-gray-500">
                     {new Date(c.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                   </span>
                 </div>
@@ -96,15 +95,26 @@ export function CommentThread({
           value={newComment}
           onChange={(e) => setNewComment(e.target.value)}
           placeholder="Write feedback or notes for the team..."
-          className="flex-1 px-3.5 py-2 rounded-xl bg-white border border-gray-300 text-xs text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-violet-500 shadow-sm"
+          aria-label="Add a review comment"
+          className="flex-1 px-3.5 py-2 rounded-xl bg-white border border-gray-300 text-xs text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-violet-500 shadow-sm"
         />
         <button
           type="submit"
           disabled={!newComment.trim() || isSubmitting}
-          className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-gray-900 hover:bg-gray-800 disabled:opacity-50 text-white text-xs font-semibold transition shadow-sm"
+          aria-label="Add a review comment"
+          className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-gray-900 hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed text-white text-xs font-semibold transition shadow-sm"
         >
-          <Send className="w-3.5 h-3.5" />
-          Post Note
+          {isSubmitting ? (
+            <>
+              <Loader2 className="w-3.5 h-3.5 animate-spin" />
+              <span>Posting...</span>
+            </>
+          ) : (
+            <>
+              <Send className="w-3.5 h-3.5" />
+              <span>Post Note</span>
+            </>
+          )}
         </button>
       </form>
     </div>

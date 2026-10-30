@@ -8,6 +8,15 @@ import { logAudit } from '../services/audit';
 
 const router = Router();
 
+const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+router.param('id', (req, res, next, id) => {
+  if (!UUID_REGEX.test(id)) {
+    res.status(404).json({ error: 'Issue not found' });
+    return;
+  }
+  next();
+});
+
 const PatchIssueSchema = z.object({
   status: z.enum(['open', 'accepted', 'dismissed']),
   dismiss_reason: z.string().optional(),

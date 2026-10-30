@@ -59,8 +59,17 @@ export function HighlightedText({
     elements.push(
       <mark
         key={`issue-${issue.id}`}
+        tabIndex={0}
+        role="button"
+        aria-label={issue.explanation || 'Select issue'}
         onClick={() => onSelectIssue(issue.id)}
-        className={`${highlightClass} relative inline-block transition-all duration-200 ${
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            onSelectIssue(issue.id);
+          }
+        }}
+        className={`${highlightClass} relative inline-block transition-all duration-200 cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-violet-600 focus-visible:ring-offset-2 ${
           isSelected ? 'ring-2 ring-violet-500 ring-offset-2 ring-offset-white font-bold scale-[1.02]' : ''
         }`}
         title={`${issue.severity.toUpperCase()}: ${issue.explanation}`}

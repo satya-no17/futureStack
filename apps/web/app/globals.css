@@ -22,6 +22,12 @@ body, .landing-page, .app-dashboard {
   min-height: 100vh;
 }
 
+/* ─── Global Accessible Focus Ring (WCAG 2.4.7 / 2.4.11) ─── */
+:focus-visible {
+  outline: 2px solid #7c3aed !important;
+  outline-offset: 2px !important;
+}
+
 /* Crisp Clean Panels (matching landing page cards) */
 .glass-panel {
   background: #ffffff;

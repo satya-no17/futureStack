@@ -86,4 +86,38 @@ router.get('/summary', authenticate, async (req: Request, res: Response) => {
   });
 });
 
+// GET /analytics/self-healing (Fetch AI rule clarification suggestions)
+router.get('/self-healing', authenticate, async (req: Request, res: Response) => {
+  const orgId = req.user!.orgId;
+  try {
+    const { generateSelfHealingSuggestions } = await import('../services/analytics/selfHealing');
+    const suggestions = await generateSelfHealingSuggestions(orgId);
+    res.json({ suggestions });
+  } catch (err: any) {
+    console.error('[Analytics] Failed to generate self-healing suggestions:', err);
+    res.status(500).json({ error: 'Failed to generate suggestions', details: err.message });
+  }
+});
+
+// POST /analytics/self-healing/apply (1-click apply suggestion)
+router.post('/self-healing/apply', authenticate, requireRole('admin'), async (req: Request, res: Response) => {
+  const orgId = req.user!.orgId;
+  const userId = req.user!.userId;
+  const { suggestionId } = req.body;
+
+  if (!suggestionId) {
+    res.status(400).json({ error: 'suggestionId is required' });
+    return;
+  }
+
+  try {
+    const { applyRuleClarification } = await import('../services/analytics/selfHealing');
+    const result = await applyRuleClarification(orgId, userId, suggestionId);
+    res.json(result);
+  } catch (err: any) {
+    console.error('[Analytics] Failed to apply rule clarification:', err);
+    res.status(500).json({ error: 'Failed to apply rule clarification', details: err.message });
+  }
+});
+
 export default router;

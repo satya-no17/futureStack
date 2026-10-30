@@ -16,6 +16,7 @@ import approvalsRouter from './routes/approvals';
 import analyticsRouter from './routes/analytics';
 import auditLogsRouter from './routes/auditLogs';
 import accessibilityRouter from './routes/accessibility';
+import assetsRouter from './routes/assets';
 import { errorHandler } from './middleware/errorHandler';
 
 dotenv.config();
@@ -80,9 +81,19 @@ app.use('/approvals', approvalsRouter);
 app.use('/analytics', analyticsRouter);
 app.use('/audit-logs', auditLogsRouter);
 app.use('/accessibility', accessibilityRouter);
+app.use('/assets', assetsRouter);
 
 // Error Handler
 app.use(errorHandler);
+
+// Process safety guards
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('[Process] Unhandled Rejection at:', promise, 'reason:', reason);
+});
+
+process.on('uncaughtException', (err) => {
+  console.error('[Process] Uncaught Exception:', err);
+});
 
 async function startServer() {
   try {

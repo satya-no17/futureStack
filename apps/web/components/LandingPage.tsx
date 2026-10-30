@@ -132,7 +132,7 @@ export function LandingPage({ onGetStarted }: LandingPageProps) {
                 <div className="space-y-3">
                   <div className="p-4 rounded-xl bg-white border border-gray-200 space-y-2">
                     <div className="text-xs font-bold text-gray-700">Brand Score</div>
-                    <div className="text-3xl font-black text-emerald-600">92<span className="text-base text-gray-400 font-normal">/100</span></div>
+                    <div className="text-3xl font-black text-emerald-600">92<span className="text-base text-gray-500 font-normal">/100</span></div>
                     <div className="text-[11px] text-emerald-600 font-medium">✓ Ready to publish</div>
                   </div>
                   <div className="p-4 rounded-xl bg-white border border-gray-200 space-y-2">
@@ -158,23 +158,23 @@ export function LandingPage({ onGetStarted }: LandingPageProps) {
       {/* ─── Trusted By / Social Proof ─── */}
       <section className="border-y border-gray-100 bg-gray-50/50">
         <div className="max-w-6xl mx-auto px-6 py-10">
-          <p className="text-center text-xs font-medium uppercase tracking-widest text-gray-400 mb-8">
+          <p className="text-center text-xs font-medium uppercase tracking-widest text-gray-500 mb-8">
             Built for modern content teams
           </p>
           <div className="flex flex-wrap items-center justify-center gap-x-12 gap-y-4 text-gray-300">
-            <div className="flex items-center gap-2 text-sm font-semibold text-gray-400">
+            <div className="flex items-center gap-2 text-sm font-semibold text-gray-600">
               <Building2 className="w-5 h-5" />
               <span>Enterprise SaaS</span>
             </div>
-            <div className="flex items-center gap-2 text-sm font-semibold text-gray-400">
+            <div className="flex items-center gap-2 text-sm font-semibold text-gray-600">
               <Globe className="w-5 h-5" />
               <span>Marketing Agencies</span>
             </div>
-            <div className="flex items-center gap-2 text-sm font-semibold text-gray-400">
+            <div className="flex items-center gap-2 text-sm font-semibold text-gray-600">
               <Users className="w-5 h-5" />
               <span>Content Teams</span>
             </div>
-            <div className="flex items-center gap-2 text-sm font-semibold text-gray-400">
+            <div className="flex items-center gap-2 text-sm font-semibold text-gray-600">
               <Award className="w-5 h-5" />
               <span>Regulated Industries</span>
             </div>
@@ -200,7 +200,7 @@ export function LandingPage({ onGetStarted }: LandingPageProps) {
               {
                 icon: FileSearch,
                 title: 'AI Content Scanning',
-                desc: 'Every draft is automatically audited against your brand voice guidelines, verified facts, and banned terms using RAG-powered AI.',
+                desc: 'Every draft is automatically audited against your brand voice guidelines, verified facts, and banned terms using AI brand intelligence.',
                 color: 'text-violet-600 bg-violet-50',
               },
               {
@@ -312,7 +312,7 @@ export function LandingPage({ onGetStarted }: LandingPageProps) {
                 Inkloom AI is a pre-publication governance platform that ensures every piece of content aligns with your brand voice, verified facts, and compliance requirements — before it reaches your audience.
               </p>
               <p className="text-base text-gray-500 leading-relaxed">
-                Built with RAG-powered AI and pgvector semantic search, Inkloom goes beyond simple keyword matching. It understands context, tone, and intent — delivering enterprise-grade brand protection with the simplicity modern teams expect.
+                Built with AI brand intelligence and semantic brand search, Inkloom goes beyond simple keyword matching. It understands context, tone, and intent — delivering enterprise-grade brand protection with the simplicity modern teams expect.
               </p>
 
               <div className="grid grid-cols-2 gap-4 pt-2">
@@ -342,7 +342,7 @@ export function LandingPage({ onGetStarted }: LandingPageProps) {
                   <div>
                     <div className="text-sm font-bold text-gray-900 mb-1">Semantic Understanding</div>
                     <p className="text-sm text-gray-500">
-                      Unlike regex-based tools, Inkloom uses vector embeddings to understand the meaning behind your brand guidelines — catching violations that pattern matching would miss.
+                      Unlike regex-based tools, Inkloom uses its brand knowledge base to understand the meaning behind your brand guidelines — catching violations that pattern matching would miss.
                     </p>
                   </div>
                 </div>
@@ -356,7 +356,7 @@ export function LandingPage({ onGetStarted }: LandingPageProps) {
                   <div>
                     <div className="text-sm font-bold text-gray-900 mb-1">Intent-Preserving Fixes</div>
                     <p className="text-sm text-gray-500">
-                      AI doesn't just flag problems — it suggests rewrites that fix the violation while preserving the original creative intent and messaging.
+                      AI doesn&apos;t just flag problems — it suggests rewrites that fix the violation while preserving the original creative intent and messaging.
                     </p>
                   </div>
                 </div>
@@ -398,7 +398,7 @@ export function LandingPage({ onGetStarted }: LandingPageProps) {
               <ArrowRight className="w-4 h-4" />
             </button>
           </div>
-          <p className="text-xs text-gray-400 pt-1">
+          <p className="text-xs text-gray-500 pt-1">
             No account required · Pre-loaded demo credentials · Free forever
           </p>
         </div>
@@ -413,16 +413,16 @@ export function LandingPage({ onGetStarted }: LandingPageProps) {
                 <ShieldCheck className="w-3.5 h-3.5 text-white" />
               </div>
               <span className="text-sm font-bold text-gray-900">Inkloom AI</span>
-              <span className="text-xs text-gray-400 ml-1">· Pre-Publication Brand Governance</span>
+              <span className="text-xs text-gray-500 ml-1">· Pre-Publication Brand Governance</span>
             </div>
 
-            <div className="flex items-center gap-6 text-xs text-gray-400">
-              <a href="#features" className="hover:text-gray-600 transition-colors">Features</a>
-              <a href="#how-it-works" className="hover:text-gray-600 transition-colors">How It Works</a>
-              <a href="#about" className="hover:text-gray-600 transition-colors">About</a>
+            <div className="flex items-center gap-6 text-xs text-gray-500">
+              <a href="#features" className="hover:text-gray-700 transition-colors">Features</a>
+              <a href="#how-it-works" className="hover:text-gray-700 transition-colors">How It Works</a>
+              <a href="#about" className="hover:text-gray-700 transition-colors">About</a>
             </div>
 
-            <p className="text-xs text-gray-400">
+            <p className="text-xs text-gray-500">
               © {new Date().getFullYear()} Inkloom. Built for FutureStack.
             </p>
           </div>

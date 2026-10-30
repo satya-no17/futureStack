@@ -12,25 +12,31 @@ import {
   Eye,
   Building,
   LogOut,
+  Layers,
+  Compass,
 } from 'lucide-react';
 
-export type ActiveTab = 'studio' | 'approvals' | 'governance' | 'analytics' | 'audit' | 'a11y' | 'multitenant';
+export type ActiveTab = 'studio' | 'slides' | 'approvals' | 'governance' | 'analytics' | 'audit' | 'a11y' | 'multitenant';
 
 interface HeaderProps {
   activeTab: ActiveTab;
   setActiveTab: (tab: ActiveTab) => void;
   pendingApprovalsCount?: number;
+  onOpenQuickStart?: () => void;
 }
 
 export function Header({
   activeTab,
   setActiveTab,
-  pendingApprovalsCount = 0
+  pendingApprovalsCount = 0,
+  onOpenQuickStart
 }: HeaderProps) {
   const { user, organization, logout } = useAuth();
+  const isSolo = user?.role === 'solo' || organization?.type === 'solo';
 
-  const navItems: { id: ActiveTab; label: string; icon: any; count?: number }[] = [
+  const allNavItems: { id: ActiveTab; label: string; icon: React.ComponentType<{ className?: string }>; count?: number }[] = [
     { id: 'studio', label: 'Drafts & Scanner', icon: FileText },
+    { id: 'slides', label: 'Slide Deck Scanner', icon: Layers },
     { id: 'approvals', label: 'Needs Review', icon: CheckCircle, count: pendingApprovalsCount },
     { id: 'governance', label: 'Brand Rules & Facts', icon: Shield },
     { id: 'analytics', label: 'Score & Reports', icon: BarChart3 },
@@ -38,6 +44,8 @@ export function Header({
     { id: 'a11y', label: 'Colors & Readability', icon: Eye },
     { id: 'multitenant', label: 'Compare Brands', icon: Building }
   ];
+
+  const navItems = isSolo ? allNavItems.filter(item => item.id !== 'approvals') : allNavItems;
 
   const roleLabels: Record<string, string> = {
     creator: 'Writer',
@@ -62,7 +70,7 @@ export function Header({
                 Brand Safety
               </span>
             </div>
-            <div className="text-[11px] text-gray-400 flex items-center gap-1.5">
+            <div className="text-[11px] text-gray-500 flex items-center gap-1.5">
               <span className="font-medium text-gray-600">{organization?.name || 'Workspace'}</span>
               <span>•</span>
               <span className="capitalize">{organization?.type || 'Team'}</span>
@@ -99,9 +107,22 @@ export function Header({
 
         {/* User Profile & Sign Out */}
         <div className="flex items-center gap-3">
+          {onOpenQuickStart && (
+            <button
+              type="button"
+              onClick={onOpenQuickStart}
+              title="Open Quick-Start Guide"
+              aria-label="Open Quick-Start Guide"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-violet-50 hover:bg-violet-100 border border-violet-200 text-violet-700 hover:text-violet-800 text-xs font-bold transition shadow-xs focus:outline-none focus-visible:ring-2 focus-visible:ring-violet-500"
+            >
+              <Compass className="w-3.5 h-3.5 text-violet-600" />
+              <span className="hidden sm:inline">Quick-Start Guide</span>
+            </button>
+          )}
+
           <div className="text-right hidden sm:block">
             <div className="text-xs font-bold text-gray-900 leading-tight">{user?.name}</div>
-            <div className="text-[11px] text-gray-400">
+            <div className="text-[11px] text-gray-500">
               {roleLabels[user?.role || ''] || user?.role}
             </div>
           </div>

@@ -37,16 +37,18 @@ export function DiffView({
         {differences.map((part, index) => {
           if (part.added) {
             return (
-              <span key={index} className="diff-added font-semibold">
+              <ins key={index} className="diff-added font-semibold" aria-label={`Added: ${part.value}`}>
+                <span className="sr-only">Added: </span>
                 {part.value}
-              </span>
+              </ins>
             );
           }
           if (part.removed) {
             return (
-              <span key={index} className="diff-removed">
+              <del key={index} className="diff-removed" aria-label={`Removed: ${part.value}`}>
+                <span className="sr-only">Removed: </span>
                 {part.value}
-              </span>
+              </del>
             );
           }
           return <span key={index} className="text-gray-700">{part.value}</span>;

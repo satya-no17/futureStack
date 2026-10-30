@@ -1,37 +1,68 @@
 'use client';
 
-import React, { useState } from 'react';
-import { api } from '../lib/api';
-import { Eye, CheckCircle2, XCircle, Sliders } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { api, ContrastResult, Issue } from '../lib/api';
+import { Eye, CheckCircle2, XCircle, Sliders, Loader2 } from 'lucide-react';
 
-export function ContrastCheckerModal() {
+export interface ContrastCheckerModalProps {
+  isOpen?: boolean;
+  onClose?: () => void;
+}
+
+export function ContrastCheckerModal({ isOpen, onClose }: ContrastCheckerModalProps = {}) {
   const [fgColor, setFgColor] = useState('#111827');
   const [bgColor, setBgColor] = useState('#F9FAFB');
-  const [contrastResult, setContrastResult] = useState<any>(null);
+  const [contrastResult, setContrastResult] = useState<ContrastResult | null>(null);
   const [testingA11yText, setTestingA11yText] = useState('');
-  const [textAuditIssues, setTextAuditIssues] = useState<any[]>([]);
+  const [textAuditIssues, setTextAuditIssues] = useState<Issue[]>([]);
+  const [isCheckingContrast, setIsCheckingContrast] = useState(false);
+  const [isAuditingText, setIsAuditingText] = useState(false);
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        onClose?.();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [onClose]);
+
+  if (isOpen === false) return null;
 
   async function handleCheckContrast() {
+    if (isCheckingContrast) return;
+    setIsCheckingContrast(true);
     try {
       const res = await api.checkContrast(fgColor, bgColor);
       setContrastResult(res);
     } catch (err) {
       console.error(err);
+    } finally {
+      setIsCheckingContrast(false);
     }
   }
 
   async function handleAuditText() {
-    if (!testingA11yText.trim()) return;
+    if (!testingA11yText.trim() || isAuditingText) return;
+    setIsAuditingText(true);
     try {
       const res = await api.auditA11yText(testingA11yText);
       setTextAuditIssues(res.issues || []);
     } catch (err) {
       console.error(err);
+    } finally {
+      setIsAuditingText(false);
     }
   }
 
   return (
-    <div className="space-y-8 max-w-4xl mx-auto">
+    <div
+      role="dialog"
+      aria-modal="true"
+      aria-label="Color Contrast & Readability Checker"
+      className="space-y-8 max-w-4xl mx-auto"
+    >
       {/* 1. Color Contrast Tool */}
       <div className="p-6 rounded-2xl bg-white border border-gray-200 shadow-sm space-y-6">
         <div className="flex items-center gap-3">
@@ -49,50 +80,67 @@ export function ContrastCheckerModal() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="space-y-4">
             <div>
-              <label className="block text-xs font-semibold text-gray-700 mb-1.5">
+              <label htmlFor="fg-color-hex" className="block text-xs font-semibold text-gray-700 mb-1.5">
                 Text Color:
               </label>
               <div className="flex items-center gap-2">
                 <input
+                  id="fg-color-picker"
                   type="color"
                   value={fgColor}
                   onChange={(e) => setFgColor(e.target.value)}
+                  aria-label="Foreground text color picker"
                   className="w-10 h-10 rounded-lg cursor-pointer bg-transparent border-0"
                 />
                 <input
+                  id="fg-color-hex"
                   type="text"
                   value={fgColor}
                   onChange={(e) => setFgColor(e.target.value)}
+                  aria-label="Foreground text hex color code"
                   className="flex-1 px-3 py-2 rounded-xl bg-white border border-gray-300 text-xs font-mono text-gray-900 shadow-sm"
                 />
               </div>
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-gray-700 mb-1.5">
+              <label htmlFor="bg-color-hex" className="block text-xs font-semibold text-gray-700 mb-1.5">
                 Background Color:
               </label>
               <div className="flex items-center gap-2">
                 <input
+                  id="bg-color-picker"
                   type="color"
                   value={bgColor}
                   onChange={(e) => setBgColor(e.target.value)}
+                  aria-label="Background color picker"
                   className="w-10 h-10 rounded-lg cursor-pointer bg-transparent border-0"
                 />
                 <input
+                  id="bg-color-hex"
                   type="text"
                   value={bgColor}
                   onChange={(e) => setBgColor(e.target.value)}
+                  aria-label="Background hex color code"
                   className="flex-1 px-3 py-2 rounded-xl bg-white border border-gray-300 text-xs font-mono text-gray-900 shadow-sm"
                 />
               </div>
             </div>
 
             <button
+              type="button"
               onClick={handleCheckContrast}
-              className="w-full py-2.5 rounded-xl bg-gray-900 hover:bg-gray-800 text-white text-xs font-bold transition shadow-sm"
+              disabled={isCheckingContrast}
+              className="w-full py-2.5 rounded-xl bg-gray-900 hover:bg-gray-800 text-white text-xs font-bold transition shadow-sm disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
             >
-              Check Colors
+              {isCheckingContrast ? (
+                <>
+                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                  <span>Checking Colors...</span>
+                </>
+              ) : (
+                <span>Check Colors</span>
+              )}
             </button>
           </div>
 
@@ -183,14 +231,24 @@ export function ContrastCheckerModal() {
           value={testingA11yText}
           onChange={(e) => setTestingA11yText(e.target.value)}
           placeholder="Paste or write text here to test (e.g. 'Check out this chart ![](https://example.com/chart.png) and ACT NOW')..."
-          className="w-full p-3.5 rounded-xl bg-white border border-gray-300 text-xs text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-violet-500 shadow-sm"
+          aria-label="Text content for accessibility audit"
+          className="w-full p-3.5 rounded-xl bg-white border border-gray-300 text-xs text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-violet-500 shadow-sm"
         />
 
         <button
+          type="button"
           onClick={handleAuditText}
-          className="px-4 py-2 rounded-xl bg-gray-900 hover:bg-gray-800 text-white text-xs font-bold transition shadow-sm"
+          disabled={isAuditingText || !testingA11yText.trim()}
+          className="px-4 py-2 rounded-xl bg-gray-900 hover:bg-gray-800 text-white text-xs font-bold transition shadow-sm disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center gap-1.5"
         >
-          Check Text
+          {isAuditingText ? (
+            <>
+              <Loader2 className="w-3.5 h-3.5 animate-spin" />
+              <span>Checking Text...</span>
+            </>
+          ) : (
+            <span>Check Text</span>
+          )}
         </button>
 
         {textAuditIssues.length > 0 && (

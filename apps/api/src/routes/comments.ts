@@ -6,6 +6,15 @@ import { logAudit } from '../services/audit';
 
 const router = Router({ mergeParams: true });
 
+const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+router.param('id', (req, res, next, id) => {
+  if (!UUID_REGEX.test(id)) {
+    res.status(404).json({ error: 'Comment or Content not found' });
+    return;
+  }
+  next();
+});
+
 const CreateCommentSchema = z.object({
   version_id: z.string().uuid(),
   body: z.string().min(1),

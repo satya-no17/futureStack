@@ -8,6 +8,7 @@ interface AuthContextType {
   organization: Organization | null;
   loading: boolean;
   login: (email: string, password?: string) => Promise<void>;
+  register: (orgName: string, orgType: string, name: string, email: string, password?: string) => Promise<void>;
   logout: () => void;
 }
 
@@ -53,6 +54,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }
 
+  async function register(
+    orgName: string,
+    orgType: string,
+    name: string,
+    email: string,
+    password = 'password123'
+  ) {
+    setLoading(true);
+    try {
+      const res = await api.register(orgName, orgType, name, email, password);
+      setUser(res.user);
+      setOrganization(res.organization);
+    } finally {
+      setLoading(false);
+    }
+  }
+
   function logout() {
     localStorage.removeItem('inkloom_token');
     setUser(null);
@@ -60,7 +78,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <AuthContext.Provider value={{ user, organization, loading, login, logout }}>
+    <AuthContext.Provider value={{ user, organization, loading, login, register, logout }}>
       {children}
     </AuthContext.Provider>
   );
