@@ -5,6 +5,10 @@ import fs from 'fs';
 import path from 'path';
 
 dotenv.config();
+if (!process.env.DATABASE_URL) {
+  dotenv.config({ path: path.resolve(__dirname, '../../.env') });
+  dotenv.config({ path: path.resolve(process.cwd(), 'apps/api/.env') });
+}
 
 const connectionString = process.env.DATABASE_URL || 'postgresql://postgres:postgres@localhost:5432/inkloom';
 

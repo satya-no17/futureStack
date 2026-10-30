@@ -107,11 +107,11 @@ export function OnboardingWalkthrough({
 
       <div className="grid gap-6 pt-5 md:grid-cols-3 md:gap-8">
         {[
-          { number: '01', title: 'Choose a draft', text: 'Open an existing draft or create a new one.', Icon: FileText },
-          { number: '02', title: 'Check the copy', text: 'Review flagged words, claims, tone, and readability.', Icon: Sparkles },
-          { number: '03', title: 'Make a decision', text: 'Apply or edit a suggestion, then request approval when needed.', Icon: CheckCircle },
-        ].map(({ number, title, text, Icon }) => <article key={number} className="rounded-r-xl border-l-4 border-violet-500 bg-white/80 py-3 pl-4 pr-3 shadow-sm shadow-violet-950/5">
-          <div className="flex items-center gap-2 text-xs font-bold text-violet-800"><span>{number}</span><Icon className="h-4 w-4" /></div>
+          { step: 'Step 1', number: '01', title: 'Choose a draft', text: 'Open an existing draft or create a new one.', Icon: FileText },
+          { step: 'Step 2', number: '02', title: 'Check the copy', text: 'Review flagged words, claims, tone, and readability.', Icon: Sparkles },
+          { step: 'Step 3', number: '03', title: 'Make a decision', text: 'Apply or edit a suggestion, then request approval when needed.', Icon: CheckCircle },
+        ].map(({ step, number, title, text, Icon }) => <article key={number} className="rounded-r-xl border-l-4 border-violet-500 bg-white/80 py-3 pl-4 pr-3 shadow-sm shadow-violet-950/5">
+          <div className="flex items-center gap-2 text-xs font-bold text-violet-800"><span>{step}</span><Icon className="h-4 w-4" /></div>
           <h3 className="mt-2 text-sm font-semibold text-gray-900">{title}</h3>
           <p className="mt-1 text-sm leading-6 text-gray-600">{text}</p>
         </article>)}
